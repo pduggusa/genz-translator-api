@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gen Z URL Translator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+        
+        .spinner {
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-loading {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .status-success {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .status-error {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .result-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+        
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .result-content {
+            padding: 20px;
+            line-height: 1.6;
+            color: #374151;
+        }
+        
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .news-article-content {
+            font-family: Georgia, serif;
+            line-height: 1.7;
+        }
+        
+        .news-article-content h1,
+        .news-article-content h2,
+        .news-article-content h3 {
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <span class="text-5xl">📱</span>
+                    <h1 class="text-4xl font-bold text-white">Gen Z URL Translator</h1>
+                    <span class="text-5xl">💬</span>
+                </div>
+                <p class="text-white/80 text-lg">Transform any website into Gen Z slang • No cap! 🔥</p>
+            </div>
+
+            <!-- Main Input Card -->
+            <div class="card p-8 mb-6">
+                <div class="mb-6">
+                    <label for="urlInput" class="block text-gray-700 font-semibold mb-3">
+                        Enter Website URL
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🌐</span>
+                        <input
+                            type="url"
+                            id="urlInput"
+                            placeholder="https://example.com"
+                            class="w-full pl-14 pr-4 py-4 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-lg"
+                        />
+                    </div>
+                    
+                    <!-- Status Message -->
+                    <div id="statusMessage" class="hidden status-message">
+                        <div class="flex items-center gap-2">
+                            <div id="statusSpinner" class="hidden spinner"></div>
+                            <span id="statusText"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    id="translateBtn"
+                    onclick="handleTranslate()"
+                    class="w-full py-4 btn-primary text-white font-bold rounded-lg text-lg"
+                >
+                    <span id="btnText">Translate to Gen Z 🔥</span>
+                    <div id="btnLoader" class="hidden flex items-center justify-center gap-3">
+                        <div class="spinner"></div>
+                        <span id="loadingText">Translating...</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Original Content -->
+                <div class="card p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        📄 Original Content
+                        <button onclick="copyToClipboard('originalContent')" class="ml-auto px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition-colors">
+                            📋 Copy
+                        </button>
+                    </h3>
+                    <div class="result-container">
+                        <div class="result-content">
+                            <div id="originalContent" class="whitespace-pre-wrap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gen Z Translation -->
+                <div class="card p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        🔥 Gen Z Translation
+                    </h3>
+                    <div class="result-container">
+                        <div class="result-header">
+                            <span>💬 Gen Z Translator</span>
+                            <button onclick="copyToClipboard('translatedContent')" class="copy-btn">
+                                📋 Copy
+                            </button>
+                        </div>
+                        <div class="result-content">
+                            <div id="translatedContent" class="whitespace-pre-wrap font-medium"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Try Another Button -->
+                <div class="text-center">
+                    <button
+                        onclick="resetTranslator()"
+                        class="px-8 py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-lg hover:bg-white/30 transition-all"
+                    >
+                        Translate Another URL ✨
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gen Z slang dictionary
+        const genZSlang = {
+            // Basic replacements
+            'very': 'hella',
+            'really': 'lowkey',
+            'actually': 'literally',
+            'honestly': 'no cap',
+            'definitely': 'for sure',
+            'absolutely': 'periodt',
+            'probably': 'prolly',
+            'because': 'cuz',
+            'though': 'tho',
+            'okay': 'bet',
+            'ok': 'bet',
+            'cool': 'fire',
+            'awesome': 'bussin',
+            'amazing': 'slaps',
+            'good': 'valid',
+            'bad': 'trash',
+            'terrible': 'mid',
+            'stupid': 'goofy',
+            'crazy': 'unhinged',
+            'weird': 'sus',
+            'suspicious': 'sus',
+            'embarrassing': 'cringe',
+            'angry': 'pressed',
+            'upset': 'salty',
+            'excited': 'hyped',
+            'tired': 'drained',
+            'confused': 'lost',
+            'understand': 'get it',
+            'leaving': 'dipping',
+            'going': 'bout to',
+            'talking': 'spitting',
+            'lying': 'capping',
+            'truth': 'facts',
+            'money': 'bag',
+            'food': 'eats',
+            'house': 'crib',
+            'car': 'whip',
+            'phone': 'device',
+            'computer': 'setup',
+            'internet': 'the web',
+            'fake': 'cap',
+            'real': 'no cap',
+            'for real': 'fr fr',
+            'nevermind': 'nvm',
+            'whatever': 'whatevs',
+            'something': 'sum',
+            'nothing': 'nun',
+            'everyone': 'y\'all',
+            'relationship': 'situationship',
+            'boyfriend': 'bae',
+            'girlfriend': 'bae',
+            'friends': 'squad',
+            'parents': 'folks',
+            'family': 'fam',
+            'ridiculous': 'unreal',
+            'hilarious': 'dead',
+            'funny': 'sending me',
+            'perfect': 'chef\'s kiss',
+            'excellent': 'immaculate',
+            'wrong': 'not it',
+            'correct': 'that\'s it',
+            'drama': 'mess',
+            'party': 'function',
+            'music': 'bops',
+            'dance': 'vibe',
+            'style': 'drip',
+            'outfit': 'fit',
+            'attractive': 'fine',
+            'ugly': 'not it',
+            'beautiful': 'gorgeous',
+            'smart': 'big brain',
+            'dumb': 'smooth brain',
+            'information': 'tea',
+            'website': 'site',
+            'content': 'stuff'
+        };
+
+        // Gen Z phrases to sprinkle in
+        const genZPhrases = [
+            'no cap',
+            'fr fr',
+            'periodt',
+            'and I oop',
+            'that hits different',
+            'it\'s giving main character',
+            'slay queen',
+            'we love to see it',
+            'this ain\'t it chief',
+            'big mood',
+            'I\'m deceased',
+            'not me...',
+            'the way I...',
+            'bestie...',
+            'respectfully',
+            'I said what I said'
+        ];
+
+        function translateToGenZ(text) {
+            let translated = text;
+            
+            // Apply slang replacements (case insensitive)
+            Object.entries(genZSlang).forEach(([original, slang]) => {
+                const regex = new RegExp(`\\b${original}\\b`, 'gi');
+                translated = translated.replace(regex, slang);
+            });
+
+            // Add Gen Z flair randomly
+            const sentences = translated.split(/[.!?]+/);
+            const enhancedSentences = sentences.map((sentence, index) => {
+                if (!sentence.trim()) return sentence;
+                
+                // Randomly add Gen Z phrases
+                if (Math.random() < 0.3) {
+                    const randomPhrase = genZPhrases[Math.floor(Math.random() * genZPhrases.length)];
+                    return `${sentence.trim()}, ${randomPhrase}`;
+                }
+                
+                // Add emphasis randomly
+                if (Math.random() < 0.2) {
+                    const emojis = ['💯', '🔥', '✨', '💅', '👑', '🚫🧢'];
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    return `${sentence.trim()} ${randomEmoji}`;
+                }
+                
+                return sentence.trim();
+            });
+
+            return enhancedSentences.join('. ').replace(/\.\s*\./g, '.');
+        }
+
+        async function fetchUrlContent(url) {
+            const BACKEND_URL = 'https://genz-translator-api.azurewebsites.net/api/fetch-url';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}?url=${encodeURIComponent(url)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to fetch content');
+                }
+                
+                return {
+                    title: data.title || 'No title found',
+                    body: data.body,
+                    url: data.url,
+                    metadata: data.metadata
+                };
+                
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    throw new Error('Cannot connect to backend service. Please check your connection.');
+                } else if (error.message.includes('timeout') || error.message.includes('408')) {
+                    throw new Error('Website took too long to respond. Try a different URL.');
+                } else if (error.message.includes('404')) {
+                    throw new Error('Page not found. Please check the URL.');
+                } else if (error.message.includes('403') || error.message.includes('401')) {
+                    throw new Error('Access denied. The website may block automated requests.');
+                }
+                
+                throw new Error(error.message);
+            }
+        }
+
+        function validateUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                return ['http:', 'https:'].includes(urlObj.protocol);
+            } catch {
+                return false;
+            }
+        }
+
+        function showStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            const statusSpinner = document.getElementById('statusSpinner');
+            
+            statusText.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            
+            if (type === 'loading') {
+                statusSpinner.classList.remove('hidden');
+            } else {
+                statusSpinner.classList.add('hidden');
+            }
+            
+            statusDiv.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            document.getElementById('statusMessage').classList.add('hidden');
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('translateBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const loadingText = document.getElementById('loadingText');
+            
+            btn.disabled = loading;
+            
+            if (loading) {
+                btnText.classList.add('hidden');
+                btnLoader.classList.remove('hidden');
+            } else {
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+            }
+        }
+
+        function showResults() {
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        function hideResults() {
+            document.getElementById('resultsSection').classList.add('hidden');
+        }
+
+        function resetTranslator() {
+            document.getElementById('urlInput').value = '';
+            hideStatus();
+            hideResults();
+        }
+
+        async function handleTranslate() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            
+            // Validate URL
+            if (!url) {
+                showStatus('Please enter a URL', 'error');
+                return;
+            }
+            
+            if (!validateUrl(url)) {
+                showStatus('Please enter a valid URL (e.g., https://example.com)', 'error');
+                return;
+            }
+
+            setLoading(true);
+            hideResults();
+            
+            try {
+                showStatus('Connecting to backend...', 'loading');
+                
+                const urlContent = await fetchUrlContent(url);
+                
+                document.getElementById('loadingText').textContent = 'Translating content...';
+                showStatus('Translating to Gen Z...', 'loading');
+                
+                // Combine title and body
+                const fullContent = `${urlContent.title}\n\n${urlContent.body}`;
+                const translated = translateToGenZ(fullContent);
+                
+                // Display results with formatting
+                displayFormattedContent('originalContent', fullContent, urlContent.metadata?.isNewsArticle);
+                displayFormattedContent('translatedContent', translated, urlContent.metadata?.isNewsArticle);
+                
+                showStatus('Translation complete! 🔥', 'success');
+                showResults();
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    hideStatus();
+                }, 3000);
+                
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                console.error('Translation error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function displayFormattedContent(elementId, content, isNewsArticle = false) {
+            const element = document.getElementById(elementId);
+            
+            // Convert formatted text to HTML for display
+            let htmlContent = content
+                // Convert headings
+                .replace(/\n(=+ .+)\n/g, (match, heading) => {
+                    const level = heading.match(/^=+/)[0].length;
+                    const text = heading.replace(/^=+ /, '');
+                    return `<h${Math.min(level, 6)} class="font-bold text-lg mt-4 mb-2 text-gray-800">${text}</h${Math.min(level, 6)}>`;
+                })
+                // Convert paragraphs
+                .replace(/\n\n([^•=\n][^\n]*(?:\n[^•=\n][^\n]*)*)/g, '<p class="mb-3 leading-relaxed">$1</p>')
+                // Convert bullet points
+                .replace(/\n• (.+)/g, '<li class="ml-4 mb-1">$1</li>')
+                // Wrap consecutive list items
+                .replace(/(<li[^>]*>.*<\/li>)(?:\s*<li[^>]*>.*<\/li>)*/gs, '<ul class="list-disc ml-6 mb-3">        function copyToClipboard(elementId) {</ul>')
+                // Convert line breaks
+                .replace(/\n/g, '<br>');
+            
+            element.innerHTML = htmlContent;
+            
+            // Add special styling for news articles
+            if (isNewsArticle) {
+                element.classList.add('news-article-content');
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('Copied to clipboard! 📋', 'success');
+                setTimeout(hideStatus, 2000);
+            }).catch(() => {
+                showStatus('Failed to copy to clipboard', 'error');
+                setTimeout(hideStatus, 2000);
+            });
+        }
+
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleTranslate();
+            }
+        });
+
+        // Auto-hide error messages after 5 seconds
+        let errorTimeout;
+        const originalShowStatus = showStatus;
+        showStatus = function(message, type = 'loading') {
+            clearTimeout(errorTimeout);
+            originalShowStatus(message, type);
+            
+            if (type === 'error') {
+                errorTimeout = setTimeout(hideStatus, 5000);
+            }
+        };
+    </script>
+</body>
+</html>
