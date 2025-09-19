@@ -15,14 +15,20 @@ COPY package*.json ./
 # Install dependencies (including playwright)
 RUN npm ci --only=production
 
-# Install Firefox for Playwright
-RUN npx playwright install firefox --with-deps
+# Create non-root user first
+RUN groupadd -r appuser && useradd -r -g appuser -m appuser
+
+# Install Firefox for Playwright as root and move to appuser home
+RUN npx playwright install firefox --with-deps && \
+    mkdir -p /home/appuser/.cache && \
+    mv /root/.cache/ms-playwright /home/appuser/.cache/ && \
+    chown -R appuser:appuser /home/appuser/.cache
 
 # Copy application files
 COPY src/ ./src/
+COPY public/ ./public/
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Change ownership and switch to non-root user
 RUN chown -R appuser:appuser /app
 USER appuser
 

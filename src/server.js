@@ -608,7 +608,27 @@ async function handleFetchUrl (req, res) {
 
   // Track request stats
   requestStats.total++;
-  const useBrowser = req.query.browser !== 'false' && req.body?.browser !== false;
+
+  // Enhanced cannabis detection - force browser emulation for cannabis sites
+  const url = req.query.url || req.body?.url;
+  const cannabisPatterns = [
+    /cannabis/i,
+    /dispensary/i,
+    /dispensaries/i,
+    /rise/i,
+    /risecannabis/i,
+    /leafly/i,
+    /weedmaps/i,
+    /dutchie/i,
+    /iheartjane/i,
+    /medical-menu/i,
+    /recreational-menu/i,
+    /strain/i,
+    /menu/i
+  ];
+
+  const isCannabisUrl = cannabisPatterns.some(pattern => pattern.test(url));
+  const useBrowser = isCannabisUrl || (req.query.browser !== 'false' && req.body?.browser !== false);
   if (useBrowser) {
     requestStats.browserRequests++;
   } else {
@@ -617,7 +637,6 @@ async function handleFetchUrl (req, res) {
 
   try {
     // Extract parameters
-    const url = req.query.url || req.body?.url;
     const followLinks = req.query.followLinks === 'true' || req.body?.followLinks === true;
     const maxLinks = Math.min(parseInt(req.query.maxLinks || req.body?.maxLinks || '5'), IS_AZURE ? 3 : 10);
     const linkFilter = req.query.linkFilter || req.body?.linkFilter || 'same-domain';
@@ -675,6 +694,9 @@ async function handleFetchUrl (req, res) {
       }
     }
 
+    if (isCannabisUrl) {
+      console.log(`🌿 Cannabis site detected: ${url} - forcing browser emulation`);
+    }
     console.log(`🌐 Processing: ${url} (browser: ${useBrowser}, links: ${followLinks}, Azure: ${IS_AZURE})`);
 
     let result;
@@ -941,6 +963,26 @@ async function handleExtract (req, res) {
       // maxLinksPerPage = 5 // Reserved for future pagination
     } = req.body;
 
+    // Enhanced cannabis detection - force browser emulation for cannabis sites
+    const cannabisPatterns = [
+      /cannabis/i,
+      /dispensary/i,
+      /dispensaries/i,
+      /rise/i,
+      /risecannabis/i,
+      /leafly/i,
+      /weedmaps/i,
+      /dutchie/i,
+      /iheartjane/i,
+      /medical-menu/i,
+      /recreational-menu/i,
+      /strain/i,
+      /menu/i
+    ];
+
+    const isCannabisUrl = cannabisPatterns.some(pattern => pattern.test(url));
+    const finalBrowserEmulation = isCannabisUrl || enableBrowserEmulation;
+
     if (!url) {
       return res.status(400).json({
         success: false,
@@ -970,12 +1012,15 @@ async function handleExtract (req, res) {
       });
     }
 
-    console.log(`🌐 Extract request: ${url} (browser: ${enableBrowserEmulation}, links: ${followLinks})`);
+    if (isCannabisUrl) {
+      console.log(`🌿 Cannabis site detected: ${url} - forcing browser emulation`);
+    }
+    console.log(`🌐 Extract request: ${url} (browser: ${finalBrowserEmulation}, links: ${followLinks})`);
 
     let result;
     let linkedContent = [];
 
-    if (enableBrowserEmulation) {
+    if (finalBrowserEmulation) {
       // Use browser emulation
       result = await fetchPageWithBrowser(url, {
         handlePopups: true,
@@ -1035,9 +1080,9 @@ async function handleExtract (req, res) {
           publishDate: structuredContent.publishDate,
           wordCount: structuredContent.wordCount,
           isNewsArticle: structuredContent.contentType === 'article',
-          extractionMethod: enableBrowserEmulation ? 'browser-emulation' : 'http-only',
+          extractionMethod: finalBrowserEmulation ? 'browser-emulation' : 'http-only',
           processingTime: Date.now() - startTime,
-          browserEnabled: enableBrowserEmulation,
+          browserEnabled: finalBrowserEmulation,
           environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
         },
         linkedContent
