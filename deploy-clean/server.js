@@ -11,226 +11,223 @@ let browserInstance = null;
 
 // Detect Azure environment
 const IS_AZURE = !!(
-    process.env.WEBSITE_SITE_NAME ||
+  process.env.WEBSITE_SITE_NAME ||
     process.env.APPSETTING_WEBSITE_SITE_NAME ||
     process.env.WEBSITE_RESOURCE_GROUP
 );
 
 async function getBrowserInstance() {
-    if (!browserInstance || !browserInstance.isConnected()) {
-        console.log('🚀 Starting new Firefox browser instance...');
+  if (!browserInstance || !browserInstance.isConnected()) {
+    console.log('🚀 Starting new Firefox browser instance...');
 
-        const launchOptions = {
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--disable-web-security',
-                ...(IS_AZURE ? ['--memory-pressure-off'] : [])
-            ]
-        };
+    const launchOptions = {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-web-security',
+        ...(IS_AZURE ? ['--memory-pressure-off'] : [])
+      ]
+    };
 
-        browserInstance = await firefox.launch(launchOptions);
-        console.log('✅ Firefox browser instance ready');
-    }
-    return browserInstance;
+    browserInstance = await firefox.launch(launchOptions);
+    console.log('✅ Firefox browser instance ready');
+  }
+  return browserInstance;
 }
 
 async function setupPage(browser) {
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0',
-        viewport: { width: 1920, height: 1080 },
-        locale: 'en-US',
-        timezoneId: 'America/New_York'
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0',
+    viewport: { width: 1920, height: 1080 },
+    locale: 'en-US',
+    timezoneId: 'America/New_York'
+  });
+
+  const page = await context.newPage();
+
+  await page.setExtraHTTPHeaders({
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    DNT: '1',
+    Connection: 'keep-alive',
+    'Upgrade-Insecure-Requests': '1'
+  });
+
+  await page.context().setGeolocation({ latitude: 40.7128, longitude: -74.0060 });
+
+  await page.addInitScript(() => {
+    Object.setPrototypeOf(navigator, null);
+    window.InstallTrigger = {};
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [1, 2, 3, 4, 5]
     });
-
-    const page = await context.newPage();
-
-    await page.setExtraHTTPHeaders({
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+    Object.defineProperty(navigator, 'languages', {
+      get: () => ['en-US', 'en']
     });
-
-    await page.context().setGeolocation({ latitude: 40.7128, longitude: -74.0060 });
-
-    await page.addInitScript(() => {
-        delete navigator.__proto__.webdriver;
-        window.InstallTrigger = {};
-        Object.defineProperty(navigator, 'plugins', {
-            get: () => [1, 2, 3, 4, 5]
-        });
-        Object.defineProperty(navigator, 'languages', {
-            get: () => ['en-US', 'en']
-        });
-        Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-        });
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => undefined
     });
+  });
 
-    return page;
+  return page;
 }
 
 async function handlePopupsAndOverlays(page) {
-    console.log('🔍 Checking for popups and overlays...');
+  console.log('🔍 Checking for popups and overlays...');
 
-    try {
-        await page.waitForTimeout(2000);
+  try {
+    await page.waitForTimeout(2000);
 
-        const popupSelectors = [
-            {
-                selectors: [
-                    'button[class*="age-confirm"], button[id*="age-confirm"]',
-                    'input[value*="yes"], input[value*="confirm"], input[value*="enter"]',
-                    'button:has-text("Yes, I am"), button:has-text("I am 21"), button:has-text("I am 18")',
-                    'button:has-text("Enter Site"), button:has-text("Continue"), button:has-text("Proceed")',
-                    '[id*="age"] button, [class*="age"] button'
-                ],
-                type: 'age-verification',
-                keywords: ['18', '21', 'yes', 'enter', 'confirm', 'proceed', 'continue']
-            },
-            {
-                selectors: [
-                    '#onetrust-accept-btn-handler',
-                    'button[class*="accept"], button[id*="accept"]',
-                    '.cookie-accept, .cookies-accept',
-                    'button:has-text("Accept"), button:has-text("Allow"), button:has-text("OK")',
-                    '[id*="cookie"] button, [class*="cookie"] button'
-                ],
-                type: 'cookie-consent',
-                keywords: ['accept', 'allow', 'ok', 'agree']
-            }
-        ];
+    const popupSelectors = [
+      {
+        selectors: [
+          'button[class*="age-confirm"], button[id*="age-confirm"]',
+          'input[value*="yes"], input[value*="confirm"], input[value*="enter"]',
+          'button:has-text("Yes, I am"), button:has-text("I am 21"), button:has-text("I am 18")',
+          'button:has-text("Enter Site"), button:has-text("Continue"), button:has-text("Proceed")',
+          '[id*="age"] button, [class*="age"] button'
+        ],
+        type: 'age-verification',
+        keywords: ['18', '21', 'yes', 'enter', 'confirm', 'proceed', 'continue']
+      },
+      {
+        selectors: [
+          '#onetrust-accept-btn-handler',
+          'button[class*="accept"], button[id*="accept"]',
+          '.cookie-accept, .cookies-accept',
+          'button:has-text("Accept"), button:has-text("Allow"), button:has-text("OK")',
+          '[id*="cookie"] button, [class*="cookie"] button'
+        ],
+        type: 'cookie-consent',
+        keywords: ['accept', 'allow', 'ok', 'agree']
+      }
+    ];
 
-        let popupsHandled = 0;
+    let popupsHandled = 0;
 
-        for (const popupType of popupSelectors) {
-            try {
-                for (const selector of popupType.selectors) {
-                    try {
-                        const elements = await page.locator(selector).all();
+    for (const popupType of popupSelectors) {
+      try {
+        for (const selector of popupType.selectors) {
+          try {
+            const elements = await page.locator(selector).all();
 
-                        for (const element of elements) {
-                            const isVisible = await element.isVisible();
-                            if (isVisible) {
-                                const elementText = (await element.textContent())?.toLowerCase() || '';
+            for (const element of elements) {
+              const isVisible = await element.isVisible();
+              if (isVisible) {
+                const elementText = (await element.textContent())?.toLowerCase() || '';
 
-                                let shouldClick = false;
+                let shouldClick = false;
 
-                                if (popupType.type === 'age-verification') {
-                                    shouldClick = popupType.keywords.some(keyword =>
-                                        elementText.includes(keyword) || selector.toLowerCase().includes(keyword)
-                                    );
-                                } else if (popupType.type === 'cookie-consent') {
-                                    shouldClick = popupType.keywords.some(keyword =>
-                                        elementText.includes(keyword)
-                                    );
-                                }
-
-                                if (shouldClick) {
-                                    console.log(`✅ Handling ${popupType.type}: ${elementText.substring(0, 50)}...`);
-                                    await element.click();
-                                    popupsHandled++;
-                                    await page.waitForTimeout(1500);
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (popupsHandled > 0) break;
-
-                    } catch (selectorError) {
-                        continue;
-                    }
+                if (popupType.type === 'age-verification') {
+                  shouldClick = popupType.keywords.some(keyword =>
+                    elementText.includes(keyword) || selector.toLowerCase().includes(keyword)
+                  );
+                } else if (popupType.type === 'cookie-consent') {
+                  shouldClick = popupType.keywords.some(keyword =>
+                    elementText.includes(keyword)
+                  );
                 }
-            } catch (typeError) {
-                continue;
+
+                if (shouldClick) {
+                  console.log(`✅ Handling ${popupType.type}: ${elementText.substring(0, 50)}...`);
+                  await element.click();
+                  popupsHandled++;
+                  await page.waitForTimeout(1500);
+                  break;
+                }
+              }
             }
+
+            if (popupsHandled > 0) break;
+          } catch (selectorError) {
+            continue;
+          }
         }
-
-        page.on('dialog', async (dialog) => {
-            console.log(`🔔 Handling dialog: ${dialog.message()}`);
-            const message = dialog.message().toLowerCase();
-            if (message.includes('age') || message.includes('18') || message.includes('21') || message.includes('old')) {
-                await dialog.accept();
-            } else if (message.includes('location') || message.includes('notification')) {
-                await dialog.dismiss();
-            } else {
-                await dialog.accept();
-            }
-            popupsHandled++;
-        });
-
-        console.log(`✨ Handled ${popupsHandled} popups/overlays`);
-        await page.waitForTimeout(1000);
-        return popupsHandled;
-
-    } catch (error) {
-        console.error('❗ Error handling popups:', error.message);
-        return 0;
+      } catch (typeError) {
+        continue;
+      }
     }
+
+    page.on('dialog', async (dialog) => {
+      console.log(`🔔 Handling dialog: ${dialog.message()}`);
+      const message = dialog.message().toLowerCase();
+      if (message.includes('age') || message.includes('18') || message.includes('21') || message.includes('old')) {
+        await dialog.accept();
+      } else if (message.includes('location') || message.includes('notification')) {
+        await dialog.dismiss();
+      } else {
+        await dialog.accept();
+      }
+      popupsHandled++;
+    });
+
+    console.log(`✨ Handled ${popupsHandled} popups/overlays`);
+    await page.waitForTimeout(1000);
+    return popupsHandled;
+  } catch (error) {
+    console.error('❗ Error handling popups:', error.message);
+    return 0;
+  }
 }
 
 async function fetchPageWithBrowser(url) {
-    let browser = null;
-    let page = null;
+  let browser = null;
+  let page = null;
 
-    try {
-        console.log(`🌐 Fetching ${url} with Firefox browser emulation...`);
+  try {
+    console.log(`🌐 Fetching ${url} with Firefox browser emulation...`);
 
-        browser = await getBrowserInstance();
-        page = await setupPage(browser);
+    browser = await getBrowserInstance();
+    page = await setupPage(browser);
 
-        page.setDefaultTimeout(30000);
+    page.setDefaultTimeout(30000);
 
-        await page.goto(url, {
-            waitUntil: 'domcontentloaded',
-            timeout: 30000
-        });
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000
+    });
 
-        await page.waitForTimeout(2000);
-        console.log('📄 Page loaded successfully');
+    await page.waitForTimeout(2000);
+    console.log('📄 Page loaded successfully');
 
-        const popupsHandled = await handlePopupsAndOverlays(page);
+    const popupsHandled = await handlePopupsAndOverlays(page);
 
-        await page.waitForTimeout(3000);
+    await page.waitForTimeout(3000);
 
-        const html = await page.content();
-        const title = await page.title();
-        const finalUrl = page.url();
+    const html = await page.content();
+    const title = await page.title();
+    const finalUrl = page.url();
 
-        console.log(`✅ Successfully extracted content from ${finalUrl}`);
+    console.log(`✅ Successfully extracted content from ${finalUrl}`);
 
-        return {
-            success: true,
-            html: html,
-            title: title,
-            url: finalUrl,
-            popupsHandled: popupsHandled
-        };
-
-    } catch (error) {
-        console.error('❌ Browser fetch failed:', error.message);
-        return {
-            success: false,
-            error: error.message,
-            url: url
-        };
-    } finally {
-        if (page) {
-            try {
-                await page.close();
-                console.log('📄 Page closed');
-            } catch (e) {
-                console.error('Error closing page:', e.message);
-            }
-        }
+    return {
+      success: true,
+      html,
+      title,
+      url: finalUrl,
+      popupsHandled
+    };
+  } catch (error) {
+    console.error('❌ Browser fetch failed:', error.message);
+    return {
+      success: false,
+      error: error.message,
+      url
+    };
+  } finally {
+    if (page) {
+      try {
+        await page.close();
+        console.log('📄 Page closed');
+      } catch (e) {
+        console.error('Error closing page:', e.message);
+      }
     }
+  }
 }
 
 // Health check endpoint
@@ -348,9 +345,8 @@ app.post('/extract', async (req, res) => {
       products,
       count: products.length,
       browserEmulation: isCannabisUrl,
-      popupsHandled: popupsHandled
+      popupsHandled
     });
-
   } catch (error) {
     console.error('Extraction error:', error.message);
     res.status(500).json({
@@ -380,5 +376,5 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🌿 Cannabis Extractor v2.0 running on port ${PORT}`);
-  console.log(`💡 Simplified architecture - 60 lines vs 1000+`);
+  console.log('💡 Simplified architecture - 60 lines vs 1000+');
 });
