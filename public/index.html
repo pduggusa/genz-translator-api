@@ -679,7 +679,7 @@
                         <div class="metric-label">Method</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-value">${data.browserMetrics?.popupsHandled || 0}</div>
+                        <div class="metric-value">${data.metrics?.popupsHandled || 0}</div>
                         <div class="metric-label">Popups Handled</div>
                     </div>
                 </div>
@@ -737,7 +737,7 @@
                 ['Extraction Method', data.extractionMethod || 'Unknown'],
                 ['Title', data.data?.title || 'No title'],
                 ['URL', data.url],
-                ['Popups Handled', data.browserMetrics?.popupsHandled || 0],
+                ['Popups Handled', data.metrics?.popupsHandled || 0],
                 ['Browser Fallback', data.fallback ? 'Yes' : 'No']
             ];
 
