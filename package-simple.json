@@ -1,0 +1,28 @@
+{
+  "name": "cannabis-extractor",
+  "version": "2.0.0",
+  "description": "Simplified cannabis product extraction API",
+  "main": "server-simple.js",
+  "scripts": {
+    "start": "node server-simple.js",
+    "dev": "nodemon server-simple.js",
+    "test": "node server-simple.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "cannabis",
+    "extraction",
+    "api",
+    "simple"
+  ]
+}
