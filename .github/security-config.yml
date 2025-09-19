@@ -1,0 +1,146 @@
+# Security Configuration for Cannabis Extractor API
+# This file defines security policies and thresholds for automated scanning
+
+security_policies:
+  # Zero tolerance for secrets in code
+  secrets:
+    max_allowed: 0
+    scan_git_history: true
+    custom_patterns:
+      - "(?i)(password|passwd|token|secret|key|api_key).*[=:]\s*['\"][^'\"]{8,}['\"]"
+      - "(?i)(aws_access_key_id|aws_secret_access_key).*[=:]\s*['\"][^'\"]{16,}['\"]"
+    excluded_paths:
+      - "node_modules/"
+      - ".git/"
+      - "coverage/"
+      - "*.log"
+
+  # Vulnerability thresholds
+  vulnerabilities:
+    npm_audit:
+      critical: 0
+      high: 5
+      moderate: 20
+    container_scan:
+      critical: 0
+      high: 10
+    sast:
+      critical_errors: 5
+      high_warnings: 20
+
+  # License compliance
+  licenses:
+    allowed:
+      - "MIT"
+      - "Apache-2.0"
+      - "BSD-2-Clause"
+      - "BSD-3-Clause"
+      - "ISC"
+      - "CC0-1.0"
+      - "Unlicense"
+    prohibited:
+      - "GPL-2.0"
+      - "GPL-3.0"
+      - "AGPL-3.0"
+      - "CPAL-1.0"
+      - "SSPL-1.0"
+      - "Commons Clause"
+
+  # Code quality gates
+  code_quality:
+    eslint_max_errors: 0
+    eslint_max_warnings: 10
+    test_coverage_min: 70
+    cyclomatic_complexity_max: 10
+
+  # Container security
+  container:
+    base_image_restrictions:
+      - "must use official Node.js image"
+      - "must not run as root"
+      - "must not expose unnecessary ports"
+    required_labels:
+      - "org.opencontainers.image.title"
+      - "org.opencontainers.image.description"
+      - "org.opencontainers.image.vendor"
+      - "org.opencontainers.image.security.validated"
+
+  # Infrastructure as Code
+  iac:
+    dockerfile_checks:
+      - "CKV_DOCKER_2"  # Ensure HEALTHCHECK is used
+      - "CKV_DOCKER_3"  # Ensure user is created
+      - "CKV_DOCKER_4"  # Ensure ADD is not used instead of COPY
+      - "CKV_DOCKER_7"  # Ensure update instructions are not cached
+
+# Deployment gates
+deployment_gates:
+  pre_deployment:
+    - security_scan_passed
+    - vulnerability_scan_passed
+    - license_compliance_passed
+    - code_quality_passed
+    - tests_passed
+    - container_scan_passed
+
+  post_deployment:
+    - health_check_passed
+    - functionality_test_passed
+    - security_headers_validated
+    - https_enforced
+
+# Monitoring and alerting
+monitoring:
+  security_events:
+    - failed_authentication_attempts
+    - unusual_request_patterns
+    - high_error_rates
+    - security_header_violations
+
+  compliance_checks:
+    frequency: "daily"
+    reports_retention: "90 days"
+    alert_on_new_vulnerabilities: true
+
+# Incident response
+incident_response:
+  security_contacts:
+    - security@dugganusa.com
+    - patrick@dugganusa.com
+
+  escalation_matrix:
+    critical: "immediate"
+    high: "within 4 hours"
+    medium: "within 24 hours"
+    low: "within 7 days"
+
+  automated_responses:
+    critical_vulnerability_detected:
+      - disable_affected_feature
+      - notify_security_team
+      - create_incident_ticket
+    secrets_detected:
+      - block_deployment
+      - notify_security_team
+      - revoke_exposed_credentials
+
+# Compliance frameworks
+compliance:
+  standards:
+    - "OWASP Top 10"
+    - "NIST Cybersecurity Framework"
+    - "CIS Controls"
+
+  requirements:
+    data_protection:
+      - encrypt_data_in_transit
+      - encrypt_data_at_rest
+      - secure_api_endpoints
+    access_control:
+      - principle_of_least_privilege
+      - multi_factor_authentication
+      - secure_session_management
+    audit_logging:
+      - log_security_events
+      - log_access_attempts
+      - log_configuration_changes
