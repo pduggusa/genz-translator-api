@@ -10,16 +10,40 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// URL autocorrect helper
+function normalizeUrl(url) {
+  if (!url) return '';
+
+  // Add https:// if no protocol
+  if (!url.match(/^https?:\/\//)) {
+    url = 'https://' + url;
+  }
+
+  // Add www. for common domains if missing
+  const needsWww = ['nytimes.com', 'washingtonpost.com', 'cnn.com'];
+  const domain = url.replace(/^https?:\/\//, '').split('/')[0];
+
+  if (needsWww.some(d => domain === d) && !domain.startsWith('www.')) {
+    url = url.replace(domain, `www.${domain}`);
+  }
+
+  return url;
+}
+
 // Main extraction endpoint
 app.post('/extract', async (req, res) => {
   try {
-    const { url } = req.body;
+    let { url } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    console.log(`Extracting from: ${url}`);
+    // Normalize URL with autocorrect
+    const originalUrl = url;
+    url = normalizeUrl(url);
+
+    console.log(`Extracting from: ${url} ${originalUrl !== url ? `(corrected from ${originalUrl})` : ''}`);
 
     const { data } = await axios.get(url, {
       headers: {
@@ -64,6 +88,7 @@ app.post('/extract', async (req, res) => {
 
     res.json({
       url,
+      originalUrl: originalUrl !== url ? originalUrl : undefined,
       timestamp: new Date().toISOString(),
       products,
       count: products.length
