@@ -40,11 +40,20 @@ RUN echo "🛡️ Running mandatory security validation..." && \
 RUN npm run test
 
 # ============================================
-# Stage 2: Production Build
+# Stage 2: Production Build with Browser Preload
 # ============================================
 FROM node:20-alpine AS production-builder
 
 WORKDIR /app
+
+# Install Firefox and dependencies first
+RUN apk add --no-cache \
+    firefox \
+    ttf-freefont \
+    font-noto-emoji \
+    dbus \
+    xvfb \
+    && rm -rf /var/cache/apk/*
 
 # Copy package files
 COPY package*.json ./
@@ -52,15 +61,30 @@ COPY package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
-# Install Playwright Firefox for cannabis site extraction
+# Install and preload Playwright Firefox
 RUN npx playwright install firefox --with-deps
+RUN npx playwright install-deps firefox
+
+# Verify Firefox installation and preload
+RUN node -e "
+const { firefox } = require('playwright');
+(async () => {
+  console.log('🔥 Preloading Firefox browser...');
+  const browser = await firefox.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto('data:text/html,<h1>Firefox Preloaded Successfully</h1>');
+  await browser.close();
+  console.log('✅ Firefox preloaded and verified');
+})().catch(e => { console.error('❌ Firefox preload failed:', e); process.exit(1); });
+"
 
 # Copy validated application code from security stage
 COPY --from=security-validator /app/server.js ./
 COPY --from=security-validator /app/package.json ./
 
 # ============================================
-# Stage 3: Runtime Container
+# Stage 3: Runtime Container with Preloaded Firefox
 # ============================================
 FROM node:20-alpine AS runtime
 
@@ -73,24 +97,44 @@ RUN apk add --no-cache \
     firefox \
     ttf-freefont \
     font-noto-emoji \
-    chromium \
+    dbus \
+    xvfb \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-# Copy production build
+# Copy production build INCLUDING preloaded Firefox
 COPY --from=production-builder --chown=nodejs:nodejs /app ./
+COPY --from=production-builder --chown=nodejs:nodejs /root/.cache/ms-playwright /home/nodejs/.cache/ms-playwright
 
-# Security: Set file permissions
-RUN chown -R nodejs:nodejs /app
+# Ensure Playwright cache directory exists and has correct permissions
+RUN mkdir -p /home/nodejs/.cache/ms-playwright && \
+    chown -R nodejs:nodejs /home/nodejs/.cache && \
+    chown -R nodejs:nodejs /app
 
 # Switch to non-root user
 USER nodejs
 
-# Environment variables
+# Environment variables for preloaded Firefox
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/nodejs/.cache/ms-playwright
+ENV DISPLAY=:99
+
+# Verify Firefox is available at runtime
+RUN node -e "
+const fs = require('fs');
+const path = require('path');
+const browserPath = process.env.PLAYWRIGHT_BROWSERS_PATH;
+console.log('🔍 Checking Firefox installation...');
+console.log('Browser path:', browserPath);
+if (fs.existsSync(browserPath)) {
+  console.log('✅ Firefox cache directory exists');
+  console.log('Contents:', fs.readdirSync(browserPath));
+} else {
+  console.log('⚠️ Firefox cache directory not found');
+}
+"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

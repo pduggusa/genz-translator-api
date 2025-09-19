@@ -8,6 +8,7 @@ app.use(express.json());
 
 // Browser instance management
 let browserInstance = null;
+let firefoxPreloaded = false;
 
 // Detect Azure environment
 const IS_AZURE = !!(
@@ -15,6 +16,37 @@ const IS_AZURE = !!(
     process.env.APPSETTING_WEBSITE_SITE_NAME ||
     process.env.WEBSITE_RESOURCE_GROUP
 );
+
+// Verify Firefox preload status
+async function verifyFirefoxPreload() {
+  try {
+    console.log('🔍 Verifying Firefox preload status...');
+    console.log('PLAYWRIGHT_BROWSERS_PATH:', process.env.PLAYWRIGHT_BROWSERS_PATH);
+
+    const fs = require('fs');
+    const path = require('path');
+    const browserPath = process.env.PLAYWRIGHT_BROWSERS_PATH || '/home/nodejs/.cache/ms-playwright';
+
+    if (fs.existsSync(browserPath)) {
+      const contents = fs.readdirSync(browserPath);
+      console.log('✅ Firefox cache directory found:', contents);
+      firefoxPreloaded = true;
+    } else {
+      console.log('⚠️ Firefox cache directory not found, will download on first use');
+      firefoxPreloaded = false;
+    }
+
+    // Test Firefox launch
+    const testBrowser = await firefox.launch({ headless: true });
+    await testBrowser.close();
+    console.log('✅ Firefox launch test successful');
+    firefoxPreloaded = true;
+
+  } catch (error) {
+    console.error('❌ Firefox preload verification failed:', error.message);
+    firefoxPreloaded = false;
+  }
+}
 
 async function getBrowserInstance() {
   if (!browserInstance || !browserInstance.isConnected()) {
@@ -230,9 +262,15 @@ async function fetchPageWithBrowser(url) {
   }
 }
 
-// Health check endpoint
+// Health check endpoint with Firefox status
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    firefoxPreloaded,
+    azureEnvironment: IS_AZURE,
+    browserPath: process.env.PLAYWRIGHT_BROWSERS_PATH
+  });
 });
 
 // URL autocorrect helper
@@ -374,7 +412,26 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🌿 Cannabis Extractor v2.0 running on port ${PORT}`);
-  console.log('💡 Simplified architecture - 60 lines vs 1000+');
-});
+
+// Start server with Firefox preload verification
+async function startServer() {
+  try {
+    console.log('🚀 Starting Cannabis Extractor API...');
+
+    // Verify Firefox preload status
+    await verifyFirefoxPreload();
+
+    app.listen(PORT, () => {
+      console.log(`🌿 Cannabis Extractor v2.0 running on port ${PORT}`);
+      console.log(`🔥 Firefox preloaded: ${firefoxPreloaded ? '✅ YES' : '⚠️ NO'}`);
+      console.log('💡 Simplified architecture - 60 lines vs 1000+');
+      console.log(`🛡️ Azure environment: ${IS_AZURE ? 'YES' : 'NO'}`);
+    });
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+
+startServer();
