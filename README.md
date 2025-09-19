@@ -1,4 +1,4 @@
-# 🌿 Cannabis Extractor API
+# 🔧 hacksaws2x4
 
 [![Security Status](https://img.shields.io/badge/Security-Enterprise%20Grade-brightgreen?style=for-the-badge&logo=shield)](.)
 [![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
@@ -7,7 +7,7 @@
 [![Test Coverage](https://img.shields.io/badge/Coverage-90%25%20Security-success?style=for-the-badge&logo=jest)](.)
 [![Firefox Ready](https://img.shields.io/badge/Firefox-Browser%20Automation-ff7139?style=for-the-badge&logo=firefox)](.)
 
-Enterprise-grade cannabis content extraction API with **5-stage security-first deployment pipeline** and comprehensive vulnerability scanning.
+Enterprise-grade content extraction API with **5-stage security-first deployment pipeline** and comprehensive vulnerability scanning.
 
 ## 🛡️ Enterprise Security Implementation
 
@@ -81,7 +81,7 @@ done
 
 ## ⚡ Key Features
 
-- **🌿 Cannabis Detection** - Intelligent activation of browser emulation for cannabis sites
+- **🌐 Content Detection** - Intelligent activation of browser emulation for complex sites
 - **🤖 Browser Automation** - Playwright Firefox with popup handling (age verification, cookies)
 - **🔒 Security Validation** - Zero-tolerance deployment blocking on security issues
 - **🚀 Ultra-Fast Builds** - 60-70% faster container deployment (2-4 min vs 8-12 min)

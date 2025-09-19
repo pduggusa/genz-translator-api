@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen Z Translator API - Content Extraction</title>
+    <title>hacksaws2x4 - Content Extraction API</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -288,7 +288,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Gen Z Translator API</h1>
+            <h1>🔧 hacksaws2x4</h1>
             <p>Advanced content extraction with browser emulation, popup handling, and structured data output</p>
         </div>
 
@@ -505,6 +505,11 @@
                 updateProgress(85, 'Parsing response...');
                 const data = await response.json();
 
+                // Debug logging
+                console.log('API Response received:', data);
+                console.log('Response success:', data.success);
+                console.log('Response contentType:', data.contentType);
+
                 updateProgress(95, 'Formatting results...');
                 await sleep(200);
 
@@ -512,6 +517,7 @@
                 await sleep(400);
 
                 // Always show results - success or error
+                console.log('About to call displayResults with:', data);
                 hideProgress();
                 displayResults(data);
 
@@ -551,12 +557,16 @@
         }
 
         function displayResults(data) {
+            console.log('displayResults called with:', data);
             currentData = data;
 
             // Always show results section
-            document.getElementById('results').style.display = 'block';
+            const resultsElement = document.getElementById('results');
+            console.log('Results element found:', resultsElement);
+            resultsElement.style.display = 'block';
 
             if (data.success) {
+                console.log('Displaying success results');
                 document.getElementById('resultsTitle').innerHTML = '✅ Extraction Successful';
 
                 // Check if it was a fallback
@@ -564,6 +574,7 @@
                     document.getElementById('resultsTitle').innerHTML = '⚠️ Extraction Successful (HTTP Fallback)';
                 }
 
+                console.log('About to call switchView with:', currentView);
                 switchView(currentView);
             } else {
                 document.getElementById('resultsTitle').innerHTML = '❌ Extraction Failed';
@@ -685,24 +696,91 @@
                 </div>
             `;
 
-            // Content details
+            // Content details with enhanced information
             let detailsHtml = `
                 <h4>📄 Content Details</h4>
                 <p><strong>Title:</strong> ${data.data?.title || 'No title'}</p>
                 <p><strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
+                <p><strong>Content Type:</strong> ${data.contentType || 'Unknown'}</p>
+                <p><strong>Browser Emulation:</strong> ${data.browserEnabled ? '🦊 Firefox' : '📡 HTTP-only'}</p>
+                <p><strong>Processing Time:</strong> ${data.processingTime || 0}ms</p>
                 ${data.fallback ? '<p class="warning">⚠️ Used HTTP fallback (browser emulation failed)</p>' : ''}
+
+                ${data.data?.headers && data.data.headers.length > 0 ? `
+                    <h5>🔍 Page Structure</h5>
+                    <ul>
+                        ${data.data.headers.slice(0, 5).map(header =>
+                            `<li><strong>H${header.level}:</strong> ${header.text}</li>`
+                        ).join('')}
+                        ${data.data.headers.length > 5 ? `<li><em>... and ${data.data.headers.length - 5} more headers</em></li>` : ''}
+                    </ul>
+                ` : ''}
+
+                ${data.data?.content?.description ? `
+                    <h5>📝 Description</h5>
+                    <p>${data.data.content.description.substring(0, 200)}${data.data.content.description.length > 200 ? '...' : ''}</p>
+                ` : ''}
+
+                ${(!data.data?.content?.description && (!data.data?.headers || data.data.headers.length === 0)) ? `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                        <h5>💡 Limited Content Extracted</h5>
+                        <p>This page may have:</p>
+                        <ul>
+                            <li>Dynamic content loaded with JavaScript</li>
+                            <li>Anti-bot protection</li>
+                            <li>Minimal content structure</li>
+                        </ul>
+                        <p><strong>Try:</strong> Different URLs like news articles, product pages, or enable browser emulation for complex sites.</p>
+                    </div>
+                ` : ''}
             `;
 
             // Pricing info if available
             let pricingHtml = '';
-            if (data.data?.pricing) {
+            if (data.data?.pricing && (data.data.pricing.currentPrice || data.data.pricing.availability)) {
                 pricingHtml = `
                     <div class="pricing-info">
                         <h4>💰 Product Pricing</h4>
-                        <p><strong>Price:</strong> ${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}</p>
-                        <p><strong>Availability:</strong> ${data.data.pricing.availability}</p>
+                        ${data.data.pricing.currentPrice ? `<p><strong>Price:</strong> ${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}</p>` : ''}
+                        ${data.data.pricing.availability ? `<p><strong>Availability:</strong> ${data.data.pricing.availability}</p>` : ''}
                         ${data.data.pricing.discount ? `<p><strong>Discount:</strong> ${data.data.pricing.discount.percentage}% OFF</p>` : ''}
                     </div>
+                `;
+            }
+
+            // Additional metadata section
+            let metadataHtml = '';
+            if (data.data?.metadata) {
+                const meta = data.data.metadata;
+                metadataHtml = `
+                    <h4>🔍 Extracted Metadata</h4>
+                    <div class="metrics-grid">
+                        ${meta.brand ? `
+                            <div class="metric-card">
+                                <div class="metric-value">${meta.brand}</div>
+                                <div class="metric-label">Brand</div>
+                            </div>
+                        ` : ''}
+                        ${meta.category ? `
+                            <div class="metric-card">
+                                <div class="metric-value">${meta.category}</div>
+                                <div class="metric-label">Category</div>
+                            </div>
+                        ` : ''}
+                        ${meta.tags && meta.tags.length > 0 ? `
+                            <div class="metric-card">
+                                <div class="metric-value">${meta.tags.length}</div>
+                                <div class="metric-label">Tags Found</div>
+                            </div>
+                        ` : ''}
+                        <div class="metric-card">
+                            <div class="metric-value">${new Date(meta.lastUpdated).toLocaleTimeString()}</div>
+                            <div class="metric-label">Extracted At</div>
+                        </div>
+                    </div>
+                    ${meta.tags && meta.tags.length > 0 ? `
+                        <p><strong>Tags:</strong> ${meta.tags.slice(0, 5).join(', ')}${meta.tags.length > 5 ? '...' : ''}</p>
+                    ` : ''}
                 `;
             }
 
@@ -723,7 +801,7 @@
                 `;
             }
 
-            content.innerHTML = metricsHtml + detailsHtml + pricingHtml + linksHtml;
+            content.innerHTML = metricsHtml + detailsHtml + metadataHtml + pricingHtml + linksHtml;
         }
 
         function displayTableView(content) {
@@ -735,17 +813,36 @@
                 ['Processing Time', `${data.processingTime || 0}ms`],
                 ['Content Type', data.contentType || 'Generic'],
                 ['Extraction Method', data.extractionMethod || 'Unknown'],
+                ['Browser Emulation', data.browserEnabled ? '🦊 Firefox' : '📡 HTTP-only'],
                 ['Title', data.data?.title || 'No title'],
-                ['URL', data.url],
+                ['URL', `<a href="${data.url}" target="_blank">${data.url}</a>`],
+                ['Headers Found', data.data?.headers?.length || 0],
                 ['Popups Handled', data.metrics?.popupsHandled || 0],
-                ['Browser Fallback', data.fallback ? 'Yes' : 'No']
+                ['Browser Fallback', data.fallback ? 'Yes' : 'No'],
+                ['Environment', data.environment || 'Unknown']
             ];
 
-            if (data.data?.pricing) {
+            // Add pricing info if available
+            if (data.data?.pricing && data.data.pricing.currentPrice) {
                 tableRows.push(
-                    ['Price', `${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}`],
+                    ['Price', `${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}`]
+                );
+            }
+            if (data.data?.pricing && data.data.pricing.availability) {
+                tableRows.push(
                     ['Availability', data.data.pricing.availability]
                 );
+            }
+
+            // Add metadata if available
+            if (data.data?.metadata) {
+                const meta = data.data.metadata;
+                if (meta.brand) tableRows.push(['Brand', meta.brand]);
+                if (meta.category) tableRows.push(['Category', meta.category]);
+                if (meta.tags && meta.tags.length > 0) {
+                    tableRows.push(['Tags', meta.tags.slice(0, 3).join(', ') + (meta.tags.length > 3 ? '...' : '')]);
+                }
+                tableRows.push(['Last Updated', new Date(meta.lastUpdated).toLocaleString()]);
             }
 
             const tableHtml = `
