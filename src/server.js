@@ -7,6 +7,8 @@ const compression = require('compression');
 const path = require('path');
 const { fetchPageWithBrowser } = require('./extractors/browser-emulation');
 const { extractStructuredContent } = require('./extractors/structured-extractor');
+const { cannabisTracker } = require('./database/cannabis-tracker');
+const { followLinksAndExtract, extractCannabisProducts } = require('./extractors/link-follower');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -520,9 +522,13 @@ app.get('/api', (req, res) => {
             'javascript-rendering',
             'structured-content-extraction',
             'e-commerce-product-detection',
+            'cannabis-dispensary-extraction',
+            'strain-potency-analysis',
             'price-tracking-support',
             'inventory-monitoring',
             'deep-link-following',
+            'historical-data-tracking',
+            'queryable-cannabis-database',
             IS_AZURE ? 'azure-app-service-optimized' : 'self-hosted-optimized'
         ],
         capabilities: {
@@ -552,11 +558,16 @@ app.get('/api', (req, res) => {
         endpoints: {
             'GET /health': 'System health and diagnostics',
             'GET /api': 'Service information and capabilities',
-            'GET/POST /api/fetch-url': 'Universal content extraction',
+            'GET/POST /api/fetch-url': 'Universal content extraction with cannabis support',
             'GET /api/product': 'Specialized product extraction',
             'POST /api/track-products': 'Batch product monitoring',
             'GET /api/stats': 'Usage statistics and metrics',
-            'GET /api/examples': 'Usage examples and documentation'
+            'GET /api/examples': 'Usage examples and documentation',
+            'GET /api/cannabis/strains': 'Search tracked cannabis strains',
+            'GET /api/cannabis/strains/:id': 'Get strain details with price history',
+            'GET /api/cannabis/trends': 'Price trends analysis for strains',
+            'GET /api/cannabis/analytics': 'Cannabis tracking analytics dashboard',
+            'GET /api/cannabis/export': 'Export cannabis data for analysis'
         },
         resourceLimits: IS_AZURE ? {
             maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
@@ -754,6 +765,15 @@ async function handleFetchUrl(req, res) {
             requestStats.productPages++;
         } else if (structuredContent.contentType === 'article') {
             requestStats.articlePages++;
+        } else if (structuredContent.contentType === 'cannabis-product') {
+            requestStats.productPages++;
+            // Save cannabis data for historical tracking
+            try {
+                const saveResult = cannabisTracker.saveProduct(structuredContent.cannabis);
+                console.log(`🌿 Cannabis data saved: strain_id=${saveResult.strain_id}`);
+            } catch (error) {
+                console.error('Failed to save cannabis data:', error);
+            }
         }
 
         const response = {
@@ -788,9 +808,50 @@ async function handleFetchUrl(req, res) {
             };
         }
 
-        // TODO: Implement link following if requested
+        // Implement link following if requested
         if (followLinks) {
-            response.note = 'Link following feature ready for implementation';
+            try {
+                console.log(`🔗 Following links from ${url}...`);
+                const followResults = await followLinksAndExtract(url, result.html, {
+                    maxLinks: maxLinks,
+                    maxDepth: 1,
+                    linkFilter: linkFilter,
+                    timeout: IS_AZURE ? 20000 : 25000
+                });
+
+                // Extract cannabis products if this is a cannabis site
+                if (structuredContent.contentType === 'cannabis-product') {
+                    const cannabisProducts = extractCannabisProducts(followResults);
+
+                    // Save each cannabis product
+                    for (const product of cannabisProducts) {
+                        try {
+                            const saveResult = cannabisTracker.saveProduct(product);
+                            console.log(`🌿 Cannabis product saved: strain_id=${saveResult.strain_id}`);
+                        } catch (error) {
+                            console.error('Failed to save cannabis product:', error);
+                        }
+                    }
+
+                    response.linkedContent = {
+                        cannabis_products: cannabisProducts,
+                        summary: {
+                            total_links_found: followResults.totalLinksFound,
+                            links_processed: followResults.linksProcessed,
+                            cannabis_products_found: cannabisProducts.length,
+                            successful_extractions: followResults.successful,
+                            errors: followResults.errors
+                        }
+                    };
+                } else {
+                    response.linkedContent = followResults;
+                }
+
+                console.log(`✅ Link following complete: ${followResults.successful} pages processed`);
+            } catch (error) {
+                console.error('Link following failed:', error);
+                response.linkFollowingError = error.message;
+            }
         }
 
         // Track successful response
@@ -1152,6 +1213,46 @@ console.log(data);`
                 'Brand, SKU, and GTIN information'
             ]
         },
+
+        cannabisExtraction: {
+            description: 'Cannabis dispensary menu extraction with individual strain data',
+            example: `${baseUrl}/api/fetch-url`,
+            method: 'POST',
+            sampleRequest: {
+                url: 'https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu/?refinementList[root_types][]=flower',
+                browser: true,
+                followLinks: true,
+                maxLinks: 5
+            },
+            extractedData: [
+                'Individual strain names and genetics',
+                'THC/CBD potency percentages',
+                'Strain types (Indica, Sativa, Hybrid)',
+                'Pricing by weight and bulk options',
+                'Availability and stock levels',
+                'Dispensary location and license info',
+                'Effects and medical uses',
+                'Customer ratings and reviews'
+            ],
+            sampleOutput: {
+                contentType: 'cannabis-product',
+                linkedContent: {
+                    cannabis_products: [
+                        {
+                            strain: { name: 'Animal Face', type: 'indica' },
+                            potency: { thc: { percentage: 27.0 }, cbd: { percentage: 0.5 } },
+                            pricing: { current_price: 150, currency: '$' },
+                            dispensary: { name: 'RISE Cannabis', location: { state: 'minnesota', city: 'new hope' } }
+                        }
+                    ],
+                    summary: {
+                        total_links_found: 32,
+                        cannabis_products_found: 5,
+                        successful_extractions: 5
+                    }
+                }
+            }
+        },
         
         batchTracking: {
             description: 'Batch product tracking for price monitoring',
@@ -1179,13 +1280,185 @@ console.log(data);`
             '✅ Ready for production use'
         ],
         
+        cannabisAnalytics: {
+            description: 'Cannabis strain tracking and analytics endpoints',
+            endpoints: {
+                searchStrains: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=20`,
+                strainDetails: `${baseUrl}/api/cannabis/strains/{strain_id}`,
+                priceTrends: `${baseUrl}/api/cannabis/trends?days=30`,
+                analytics: `${baseUrl}/api/cannabis/analytics`,
+                exportData: `${baseUrl}/api/cannabis/export`
+            },
+            sampleQueries: {
+                highPotencyIndicas: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=25`,
+                budgetStrains: `${baseUrl}/api/cannabis/strains?price_max=60`,
+                riseDispensary: `${baseUrl}/api/cannabis/strains?dispensary=RISE`,
+                recentTrends: `${baseUrl}/api/cannabis/trends?days=7`
+            },
+            useCases: [
+                'Track price changes over time for specific strains',
+                'Monitor when new high-potency strains become available',
+                'Compare pricing across different dispensaries',
+                'Alert when favorite strains go on sale',
+                'Analyze potency trends in the market',
+                'Export data for external analysis tools'
+            ]
+        },
+
         testEndpoints: {
             health: `${baseUrl}/health`,
             apiInfo: `${baseUrl}/api`,
             stats: `${baseUrl}/api/stats`,
-            testExtraction: `${baseUrl}/api/fetch-url?url=https://example.com&browser=true`
+            testExtraction: `${baseUrl}/api/fetch-url?url=https://example.com&browser=true`,
+            cannabisExample: `${baseUrl}/api/fetch-url`,
+            cannabisSearch: `${baseUrl}/api/cannabis/strains`,
+            cannabisAnalytics: `${baseUrl}/api/cannabis/analytics`
         }
     });
+});
+
+// Cannabis tracking and analytics endpoints
+app.get('/api/cannabis/strains', (req, res) => {
+    try {
+        const criteria = {
+            name: req.query.name,
+            type: req.query.type, // indica, sativa, hybrid
+            thc_min: req.query.thc_min ? parseFloat(req.query.thc_min) : undefined,
+            thc_max: req.query.thc_max ? parseFloat(req.query.thc_max) : undefined,
+            dispensary: req.query.dispensary
+        };
+
+        const strains = cannabisTracker.searchStrains(criteria);
+
+        res.json({
+            success: true,
+            total: strains.length,
+            strains: strains,
+            filters_applied: criteria,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to search strains',
+            details: error.message
+        });
+    }
+});
+
+// Get specific strain details with history
+app.get('/api/cannabis/strains/:strainId', (req, res) => {
+    try {
+        const { strainId } = req.params;
+        const strain = cannabisTracker.getStrain(strainId);
+
+        if (!strain) {
+            return res.status(404).json({
+                success: false,
+                error: 'Strain not found',
+                strain_id: strainId
+            });
+        }
+
+        const priceHistory = cannabisTracker.getPriceHistory(strainId);
+        const availabilityHistory = cannabisTracker.getAvailabilityHistory(strainId);
+        const priceTrends = cannabisTracker.getPriceTrends(strainId, 30);
+
+        res.json({
+            success: true,
+            strain: strain,
+            history: {
+                price: priceHistory,
+                availability: availabilityHistory,
+                trends: priceTrends
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get strain details',
+            details: error.message
+        });
+    }
+});
+
+// Get price trends for multiple strains
+app.get('/api/cannabis/trends', (req, res) => {
+    try {
+        const type = req.query.type; // indica, sativa, hybrid
+        const days = parseInt(req.query.days) || 30;
+
+        let strains;
+        if (type) {
+            strains = cannabisTracker.getStrainsByType(type);
+        } else {
+            strains = cannabisTracker.getAllStrains();
+        }
+
+        const trends = strains.slice(0, 20).map(strain => {
+            const priceTrend = cannabisTracker.getPriceTrends(strain.id, days);
+            return {
+                strain_id: strain.id,
+                name: strain.name,
+                type: strain.type || 'unknown',
+                dispensary: strain.dispensary,
+                trend: priceTrend
+            };
+        });
+
+        res.json({
+            success: true,
+            period_days: days,
+            filter_type: type || 'all',
+            trends: trends,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get price trends',
+            details: error.message
+        });
+    }
+});
+
+// Cannabis analytics dashboard
+app.get('/api/cannabis/analytics', (req, res) => {
+    try {
+        const analytics = cannabisTracker.getAnalyticsSummary();
+
+        res.json({
+            success: true,
+            analytics: analytics,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get analytics',
+            details: error.message
+        });
+    }
+});
+
+// Export cannabis data (for backup/analysis)
+app.get('/api/cannabis/export', (req, res) => {
+    try {
+        const data = cannabisTracker.exportData();
+
+        res.json({
+            success: true,
+            data: data,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to export data',
+            details: error.message
+        });
+    }
 });
 
 // Error handling middleware

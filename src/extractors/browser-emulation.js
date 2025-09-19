@@ -101,10 +101,15 @@ async function getBrowserInstance() {
 
 // Enhanced page setup with realistic browser behavior for Playwright
 async function setupPage(browser) {
-    const page = await browser.newPage();
+    // Create browser context with user agent
+    const context = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0',
+        viewport: { width: 1920, height: 1080 },
+        locale: 'en-US',
+        timezoneId: 'America/New_York'
+    });
 
-    // Set realistic user agent
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0');
+    const page = await context.newPage();
 
     // Set extra headers
     await page.setExtraHTTPHeaders({
@@ -114,12 +119,6 @@ async function setupPage(browser) {
         'DNT': '1',
         'Connection': 'keep-alive',
         'Upgrade-Insecure-Requests': '1'
-    });
-
-    // Set viewport
-    await page.setViewportSize({
-        width: 1920,
-        height: 1080
     });
 
     // Set geolocation (US-based)

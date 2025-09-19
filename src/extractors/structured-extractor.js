@@ -1,10 +1,11 @@
 // src/extractors/structured-extractor.js
-// Enhanced E-commerce & Structured Content Scraper
+// Enhanced E-commerce & Structured Content Scraper with Cannabis Support
 
 const { Readability } = require('@mozilla/readability');
 const { JSDOM } = require('jsdom');
 const cheerio = require('cheerio');
 const TurndownService = require('turndown');
+const { isCannabisContent, extractCannabisData } = require('./cannabis-extractor');
 
 // Configure Turndown for better markdown output
 const turndownService = new TurndownService({
@@ -29,12 +30,32 @@ turndownService.addRule('lineBreaks', {
 function extractStructuredContent(html, url) {
     try {
         const $ = cheerio.load(html);
-        
-        // Detect content type
+
+        // Check for cannabis content first (highest priority)
+        if (isCannabisContent(html, $)) {
+            const cannabisData = extractCannabisData(html, $, url);
+            const regularData = extractProductData(html, $, url);
+
+            // Merge cannabis-specific data with regular product data
+            const structuredContent = {
+                ...regularData,
+                cannabis: cannabisData,
+                contentType: 'cannabis-product'
+            };
+
+            return {
+                contentType: 'cannabis-product',
+                ...structuredContent,
+                extractionTimestamp: new Date().toISOString(),
+                sourceUrl: url
+            };
+        }
+
+        // Detect regular content type
         const contentType = detectContentType(html, $);
-        
+
         let structuredContent;
-        
+
         switch (contentType) {
             case 'product':
                 structuredContent = extractProductData(html, $, url);
