@@ -15,43 +15,43 @@ const PORT = process.env.PORT || 3000;
 
 // Detect Azure environment
 const IS_AZURE = !!(
-    process.env.WEBSITE_SITE_NAME || 
+  process.env.WEBSITE_SITE_NAME ||
     process.env.APPSETTING_WEBSITE_SITE_NAME ||
     process.env.WEBSITE_RESOURCE_GROUP
 );
 
 // Azure-specific configurations
 const azureConfig = {
-    port: PORT,
-    browser: {
-        maxConcurrent: IS_AZURE ? 2 : 3,
-        timeout: IS_AZURE ? 25000 : 30000,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--disable-gpu',
-            '--disable-web-security',
-            '--disable-features=VizDisplayCompositor',
-            '--window-size=1920,1080',
-            '--memory-pressure-off',
-            '--max_old_space_size=' + (IS_AZURE ? '2048' : '4096')
-        ]
-    },
-    rateLimiting: {
-        windowMs: 15 * 60 * 1000,
-        standardMax: IS_AZURE ? 50 : 100,
-        browserMax: IS_AZURE ? 15 : 30
-    }
+  port: PORT,
+  browser: {
+    maxConcurrent: IS_AZURE ? 2 : 3,
+    timeout: IS_AZURE ? 25000 : 30000,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu',
+      '--disable-web-security',
+      '--disable-features=VizDisplayCompositor',
+      '--window-size=1920,1080',
+      '--memory-pressure-off',
+      '--max_old_space_size=' + (IS_AZURE ? '2048' : '4096')
+    ]
+  },
+  rateLimiting: {
+    windowMs: 15 * 60 * 1000,
+    standardMax: IS_AZURE ? 50 : 100,
+    browserMax: IS_AZURE ? 15 : 30
+  }
 };
 
 console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : 'Local/Self-hosted'}`);
 if (IS_AZURE) {
-    console.log(`📊 Azure Site: ${process.env.WEBSITE_SITE_NAME}`);
-    console.log(`🔧 Resource optimizations: Enabled`);
+  console.log(`📊 Azure Site: ${process.env.WEBSITE_SITE_NAME}`);
+  console.log('🔧 Resource optimizations: Enabled');
 }
 
 // Compression middleware (important for Azure bandwidth)
@@ -59,71 +59,71 @@ app.use(compression());
 
 // Security middleware
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https:", "http:"],
-            connectSrc: ["'self'"]
-        }
-    },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ['\'self\''],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      scriptSrc: ['\'self\'', '\'unsafe-inline\'', 'https://cdnjs.cloudflare.com'],
+      imgSrc: ['\'self\'', 'data:', 'https:', 'http:'],
+      connectSrc: ['\'self\'']
     }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
 // CORS configuration
 app.use(cors({
-    origin: [
-        'https://dugganusa.com',
-        'https://www.dugganusa.com',
-        /\.dugganusa\.com$/,
-        /\.wixsite\.com$/,
-        /\.editorx\.io$/,
-        'https://pduggusa.github.io',
-        'https://pduggusa.github.io/geny-translator',
-        /\.github\.io$/,
-        /\.azurewebsites\.net$/,
-        process.env.CUSTOM_DOMAIN,
-        'http://localhost:3000',
-        'http://localhost:8080'
-    ].filter(Boolean),
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept'],
-    optionsSuccessStatus: 200
+  origin: [
+    'https://dugganusa.com',
+    'https://www.dugganusa.com',
+    /\.dugganusa\.com$/,
+    /\.wixsite\.com$/,
+    /\.editorx\.io$/,
+    'https://pduggusa.github.io',
+    'https://pduggusa.github.io/geny-translator',
+    /\.github\.io$/,
+    /\.azurewebsites\.net$/,
+    process.env.CUSTOM_DOMAIN,
+    'http://localhost:3000',
+    'http://localhost:8080'
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  optionsSuccessStatus: 200
 }));
 
 // Rate limiting
 const standardLimiter = rateLimit({
-    windowMs: azureConfig.rateLimiting.windowMs,
-    max: azureConfig.rateLimiting.standardMax,
-    message: {
-        error: 'Too many requests from this IP, please try again later.',
-        retryAfter: '15 minutes'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => {
-        return req.path === '/health' || 
+  windowMs: azureConfig.rateLimiting.windowMs,
+  max: azureConfig.rateLimiting.standardMax,
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    return req.path === '/health' ||
                req.path === '/api/health' ||
                req.headers['user-agent']?.includes('AlwaysOn');
-    }
+  }
 });
 
 const browserLimiter = rateLimit({
-    windowMs: azureConfig.rateLimiting.windowMs,
-    max: azureConfig.rateLimiting.browserMax,
-    message: {
-        error: `Too many browser requests. ${IS_AZURE ? 'Azure has limited resources.' : 'Please try again later.'}`,
-        retryAfter: '15 minutes'
-    },
-    skip: (req) => {
-        return !(req.query.browser !== 'false' && req.body?.browser !== false) ||
+  windowMs: azureConfig.rateLimiting.windowMs,
+  max: azureConfig.rateLimiting.browserMax,
+  message: {
+    error: `Too many browser requests. ${IS_AZURE ? 'Azure has limited resources.' : 'Please try again later.'}`,
+    retryAfter: '15 minutes'
+  },
+  skip: (req) => {
+    return !(req.query.browser !== 'false' && req.body?.browser !== false) ||
                req.headers['user-agent']?.includes('AlwaysOn');
-    }
+  }
 });
 
 app.use('/api/', standardLimiter);
@@ -137,82 +137,82 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Request stats tracking
-let requestStats = {
-    total: 0,
-    browserRequests: 0,
-    httpRequests: 0,
-    successful: 0,
-    failed: 0,
-    productPages: 0,
-    articlePages: 0,
-    startTime: new Date(),
-    azureOptimized: IS_AZURE
+const requestStats = {
+  total: 0,
+  browserRequests: 0,
+  httpRequests: 0,
+  successful: 0,
+  failed: 0,
+  productPages: 0,
+  articlePages: 0,
+  startTime: new Date(),
+  azureOptimized: IS_AZURE
 };
 
 // Health check endpoint (Azure-compatible)
 app.get('/health', async (req, res) => {
-    const memoryUsage = process.memoryUsage();
+  const memoryUsage = process.memoryUsage();
 
-    const healthCheck = {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-        version: '3.0.0',
-        uptime: Math.floor(process.uptime()),
-        memory: {
-            used: Math.round(memoryUsage.rss / 1024 / 1024),
-            heap: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-            available: Math.round(require('os').totalmem() / 1024 / 1024)
-        },
-        components: {
-            webServer: 'healthy',
-            browserEmulation: 'testing',
-            structuredExtraction: 'healthy'
-        },
-        features: {
-            popupHandling: true,
-            browserEmulation: 'Playwright Firefox',
-            structuredOutput: true,
-            priceTracking: true,
-            azureOptimized: IS_AZURE
-        }
+  const healthCheck = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+    version: '3.0.0',
+    uptime: Math.floor(process.uptime()),
+    memory: {
+      used: Math.round(memoryUsage.rss / 1024 / 1024),
+      heap: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+      available: Math.round(require('os').totalmem() / 1024 / 1024)
+    },
+    components: {
+      webServer: 'healthy',
+      browserEmulation: 'testing',
+      structuredExtraction: 'healthy'
+    },
+    features: {
+      popupHandling: true,
+      browserEmulation: 'Playwright Firefox',
+      structuredOutput: true,
+      priceTracking: true,
+      azureOptimized: IS_AZURE
+    }
+  };
+
+  // Test browser availability
+  try {
+    const { firefox } = require('playwright');
+    const browser = await firefox.launch({ headless: true });
+    await browser.close();
+    healthCheck.components.browserEmulation = 'healthy';
+    healthCheck.browserTest = 'Firefox launched successfully';
+  } catch (browserError) {
+    healthCheck.components.browserEmulation = 'error';
+    healthCheck.browserTest = `Firefox error: ${browserError.message}`;
+    healthCheck.status = 'degraded';
+    healthCheck.warnings = ['Browser emulation unavailable'];
+  }
+
+  // Add Azure-specific info (without sensitive details)
+  if (IS_AZURE) {
+    healthCheck.azure = {
+      optimized: true,
+      platform: 'Azure App Service'
     };
+  }
 
-    // Test browser availability
-    try {
-        const { firefox } = require('playwright');
-        const browser = await firefox.launch({ headless: true });
-        await browser.close();
-        healthCheck.components.browserEmulation = 'healthy';
-        healthCheck.browserTest = 'Firefox launched successfully';
-    } catch (browserError) {
-        healthCheck.components.browserEmulation = 'error';
-        healthCheck.browserTest = `Firefox error: ${browserError.message}`;
-        healthCheck.status = 'degraded';
-        healthCheck.warnings = ['Browser emulation unavailable'];
-    }
-
-    // Add Azure-specific info (without sensitive details)
-    if (IS_AZURE) {
-        healthCheck.azure = {
-            optimized: true,
-            platform: 'Azure App Service'
-        };
-    }
-
-    res.json(healthCheck);
+  res.json(healthCheck);
 });
 
 // Root endpoint serves the frontend
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 // Interactive testing interface
 app.get('/test', (req, res) => {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    const testInterface = `
+  const testInterface = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -504,94 +504,96 @@ app.get('/test', (req, res) => {
 </html>
     `;
 
-    res.send(testInterface);
+  res.send(testInterface);
 });
 
 // Enhanced API documentation endpoint
 app.get('/api', (req, res) => {
-    res.json({
-        service: 'Gen Z Translator API',
-        status: 'operational',
-        version: '3.0.0',
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-        features: [
-            'browser-emulation-with-puppeteer',
-            'comprehensive-popup-handling',
-            'age-verification-automation',
-            'cookie-consent-handling',
-            'javascript-rendering',
-            'structured-content-extraction',
-            'e-commerce-product-detection',
-            'cannabis-dispensary-extraction',
-            'strain-potency-analysis',
-            'price-tracking-support',
-            'inventory-monitoring',
-            'deep-link-following',
-            'historical-data-tracking',
-            'queryable-cannabis-database',
-            IS_AZURE ? 'azure-app-service-optimized' : 'self-hosted-optimized'
-        ],
-        capabilities: {
-            popupTypes: [
-                'Age verification (18+, 21+)',
-                'Cookie consent banners',
-                'Newsletter signup modals',
-                'GDPR compliance dialogs',
-                'Location permission requests',
-                'Notification prompts',
-                'App download banners'
-            ],
-            contentTypes: [
-                'E-commerce products with pricing',
-                'News articles with metadata',
-                'Blog posts and content pages',
-                'Product catalogs and listings',
-                'JavaScript-heavy SPAs'
-            ],
-            outputFormats: [
-                'Structured JSON with semantic tags',
-                'Clean HTML with formatting',
-                'Plain text content',
-                'Markdown with preserved structure'
-            ]
-        },
-        endpoints: {
-            'GET /health': 'System health and diagnostics',
-            'GET /api': 'Service information and capabilities',
-            'GET/POST /api/fetch-url': 'Universal content extraction with cannabis support',
-            'GET /api/product': 'Specialized product extraction',
-            'POST /api/track-products': 'Batch product monitoring',
-            'GET /api/stats': 'Usage statistics and metrics',
-            'GET /api/examples': 'Usage examples and documentation',
-            'GET /api/cannabis/strains': 'Search tracked cannabis strains',
-            'GET /api/cannabis/strains/:id': 'Get strain details with price history',
-            'GET /api/cannabis/trends': 'Price trends analysis for strains',
-            'GET /api/cannabis/analytics': 'Cannabis tracking analytics dashboard',
-            'GET /api/cannabis/export': 'Export cannabis data for analysis'
-        },
-        resourceLimits: IS_AZURE ? {
-            maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
-            browserTimeout: azureConfig.browser.timeout + 'ms',
-            rateLimits: {
-                standard: azureConfig.rateLimiting.standardMax + ' requests per 15 minutes',
-                browser: azureConfig.rateLimiting.browserMax + ' requests per 15 minutes'
-            },
-            memoryLimit: '~1.5GB (Azure B1/S1 plan)',
-            optimizations: [
-                'Reduced browser concurrency',
-                'Memory usage monitoring',
-                'Automatic cleanup processes',
-                'Optimized request delays'
-            ]
-        } : {
-            maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
-            browserTimeout: azureConfig.browser.timeout + 'ms',
-            rateLimits: {
-                standard: azureConfig.rateLimiting.standardMax + ' requests per 15 minutes',
-                browser: azureConfig.rateLimiting.browserMax + ' requests per 15 minutes'
-            }
+  res.json({
+    service: 'Gen Z Translator API',
+    status: 'operational',
+    version: '3.0.0',
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+    features: [
+      'browser-emulation-with-puppeteer',
+      'comprehensive-popup-handling',
+      'age-verification-automation',
+      'cookie-consent-handling',
+      'javascript-rendering',
+      'structured-content-extraction',
+      'e-commerce-product-detection',
+      'cannabis-dispensary-extraction',
+      'strain-potency-analysis',
+      'price-tracking-support',
+      'inventory-monitoring',
+      'deep-link-following',
+      'historical-data-tracking',
+      'queryable-cannabis-database',
+      IS_AZURE ? 'azure-app-service-optimized' : 'self-hosted-optimized'
+    ],
+    capabilities: {
+      popupTypes: [
+        'Age verification (18+, 21+)',
+        'Cookie consent banners',
+        'Newsletter signup modals',
+        'GDPR compliance dialogs',
+        'Location permission requests',
+        'Notification prompts',
+        'App download banners'
+      ],
+      contentTypes: [
+        'E-commerce products with pricing',
+        'News articles with metadata',
+        'Blog posts and content pages',
+        'Product catalogs and listings',
+        'JavaScript-heavy SPAs'
+      ],
+      outputFormats: [
+        'Structured JSON with semantic tags',
+        'Clean HTML with formatting',
+        'Plain text content',
+        'Markdown with preserved structure'
+      ]
+    },
+    endpoints: {
+      'GET /health': 'System health and diagnostics',
+      'GET /api': 'Service information and capabilities',
+      'GET/POST /api/fetch-url': 'Universal content extraction with cannabis support',
+      'GET /api/product': 'Specialized product extraction',
+      'POST /api/track-products': 'Batch product monitoring',
+      'GET /api/stats': 'Usage statistics and metrics',
+      'GET /api/examples': 'Usage examples and documentation',
+      'GET /api/cannabis/strains': 'Search tracked cannabis strains',
+      'GET /api/cannabis/strains/:id': 'Get strain details with price history',
+      'GET /api/cannabis/trends': 'Price trends analysis for strains',
+      'GET /api/cannabis/analytics': 'Cannabis tracking analytics dashboard',
+      'GET /api/cannabis/export': 'Export cannabis data for analysis'
+    },
+    resourceLimits: IS_AZURE
+      ? {
+          maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
+          browserTimeout: azureConfig.browser.timeout + 'ms',
+          rateLimits: {
+            standard: azureConfig.rateLimiting.standardMax + ' requests per 15 minutes',
+            browser: azureConfig.rateLimiting.browserMax + ' requests per 15 minutes'
+          },
+          memoryLimit: '~1.5GB (Azure B1/S1 plan)',
+          optimizations: [
+            'Reduced browser concurrency',
+            'Memory usage monitoring',
+            'Automatic cleanup processes',
+            'Optimized request delays'
+          ]
         }
-    });
+      : {
+          maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
+          browserTimeout: azureConfig.browser.timeout + 'ms',
+          rateLimits: {
+            standard: azureConfig.rateLimiting.standardMax + ' requests per 15 minutes',
+            browser: azureConfig.rateLimiting.browserMax + ' requests per 15 minutes'
+          }
+        }
+  });
 });
 
 // Main fetch URL endpoint
@@ -602,580 +604,580 @@ app.post('/api/fetch-url', handleFetchUrl);
 app.post('/extract', handleExtract);
 
 async function handleFetchUrl(req, res) {
-    const startTime = Date.now();
-    
-    // Track request stats
-    requestStats.total++;
-    const useBrowser = req.query.browser !== 'false' && req.body?.browser !== false;
-    if (useBrowser) {
-        requestStats.browserRequests++;
-    } else {
-        requestStats.httpRequests++;
+  const startTime = Date.now();
+
+  // Track request stats
+  requestStats.total++;
+  const useBrowser = req.query.browser !== 'false' && req.body?.browser !== false;
+  if (useBrowser) {
+    requestStats.browserRequests++;
+  } else {
+    requestStats.httpRequests++;
+  }
+
+  try {
+    // Extract parameters
+    const url = req.query.url || req.body?.url;
+    const followLinks = req.query.followLinks === 'true' || req.body?.followLinks === true;
+    const maxLinks = Math.min(parseInt(req.query.maxLinks || req.body?.maxLinks || '5'), IS_AZURE ? 3 : 10);
+    const linkFilter = req.query.linkFilter || req.body?.linkFilter || 'same-domain';
+    const takeScreenshot = req.query.screenshot === 'true' || req.body?.screenshot === true;
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL parameter is required',
+        usage: {
+          GET: '/api/fetch-url?url=https://example.com&browser=true',
+          POST: '{"url": "https://example.com", "browser": true, "followLinks": true}',
+          parameters: {
+            url: 'Target URL (required)',
+            browser: 'Enable browser emulation (default: true)',
+            followLinks: 'Follow links one level deep (default: false)',
+            maxLinks: `Maximum links to follow (default: 5, max: ${IS_AZURE ? 3 : 10})`,
+            linkFilter: 'Link filtering: same-domain, same-site, all (default: same-domain)',
+            screenshot: 'Take page screenshot (default: false)'
+          }
+        },
+        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+      });
     }
-    
+
+    // Validate URL
+    let targetUrl;
     try {
-        // Extract parameters
-        const url = req.query.url || req.body?.url;
-        const followLinks = req.query.followLinks === 'true' || req.body?.followLinks === true;
-        const maxLinks = Math.min(parseInt(req.query.maxLinks || req.body?.maxLinks || '5'), IS_AZURE ? 3 : 10);
-        const linkFilter = req.query.linkFilter || req.body?.linkFilter || 'same-domain';
-        const takeScreenshot = req.query.screenshot === 'true' || req.body?.screenshot === true;
-
-        if (!url) {
-            return res.status(400).json({
-                success: false,
-                error: 'URL parameter is required',
-                usage: {
-                    GET: '/api/fetch-url?url=https://example.com&browser=true',
-                    POST: '{"url": "https://example.com", "browser": true, "followLinks": true}',
-                    parameters: {
-                        url: 'Target URL (required)',
-                        browser: 'Enable browser emulation (default: true)',
-                        followLinks: 'Follow links one level deep (default: false)',
-                        maxLinks: `Maximum links to follow (default: 5, max: ${IS_AZURE ? 3 : 10})`,
-                        linkFilter: 'Link filtering: same-domain, same-site, all (default: same-domain)',
-                        screenshot: 'Take page screenshot (default: false)'
-                    }
-                },
-                environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-            });
-        }
-
-        // Validate URL
-        let targetUrl;
-        try {
-            targetUrl = new URL(url);
-            if (!['http:', 'https:'].includes(targetUrl.protocol)) {
-                throw new Error('Only HTTP and HTTPS URLs are allowed');
-            }
-        } catch (urlError) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid URL format',
-                details: urlError.message,
-                example: 'https://example.com/page'
-            });
-        }
-
-        // Azure resource check for browser emulation
-        if (useBrowser && IS_AZURE) {
-            const memoryUsage = process.memoryUsage().rss / 1024 / 1024;
-            if (memoryUsage > 1200) {
-                console.warn(`⚠️ High memory usage (${memoryUsage.toFixed(0)}MB), disabling browser emulation`);
-                
-                return res.status(503).json({
-                    success: false,
-                    error: 'Browser emulation temporarily unavailable due to resource constraints',
-                    suggestion: 'Try again in a few minutes or use browser=false for HTTP-only extraction',
-                    memoryUsage: memoryUsage.toFixed(0) + 'MB',
-                    alternative: `${req.protocol}://${req.get('host')}/api/fetch-url?url=${encodeURIComponent(url)}&browser=false`
-                });
-            }
-        }
-
-        console.log(`🌐 Processing: ${url} (browser: ${useBrowser}, links: ${followLinks}, Azure: ${IS_AZURE})`);
-
-        let result;
-
-        if (useBrowser) {
-            // Use browser emulation for complex pages
-            try {
-                result = await fetchPageWithBrowser(url, {
-                    handlePopups: true,
-                    scrollToBottom: true,
-                    takeScreenshot: takeScreenshot,
-                    timeout: IS_AZURE ? 25000 : 30000
-                });
-
-                if (!result.success) {
-                    console.error('🔴 Browser emulation failed:', result.error);
-                    // Fallback to HTTP-only extraction
-                    console.log('📡 Falling back to HTTP-only extraction...');
-                    const axios = require('axios');
-                    const response = await axios.get(url, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
-                        },
-                        timeout: 15000
-                    });
-                    result = {
-                        success: true,
-                        html: response.data,
-                        title: url,
-                        url: url,
-                        fallback: true,
-                        browserError: result.error
-                    };
-                }
-            } catch (browserError) {
-                console.error('🔴 Browser setup failed:', browserError.message);
-                // Fallback to HTTP-only extraction
-                console.log('📡 Falling back to HTTP-only extraction...');
-                const axios = require('axios');
-                try {
-                    const response = await axios.get(url, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
-                        },
-                        timeout: 15000
-                    });
-                    result = {
-                        success: true,
-                        html: response.data,
-                        title: url,
-                        url: url,
-                        fallback: true,
-                        browserError: browserError.message
-                    };
-                } catch (httpError) {
-                    throw new Error(`Both browser and HTTP extraction failed. Browser: ${browserError.message}, HTTP: ${httpError.message}`);
-                }
-            }
-        } else {
-            // Simple HTTP fetch fallback
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const html = await response.text();
-            result = {
-                success: true,
-                html: html,
-                title: '',
-                url: url,
-                metrics: {
-                    jsEnabled: false,
-                    popupsHandled: 0,
-                    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-                }
-            };
-        }
-
-        // Extract structured content
-        const structuredContent = extractStructuredContent(result.html, url);
-
-        // Track content type for stats
-        if (structuredContent.contentType === 'product') {
-            requestStats.productPages++;
-        } else if (structuredContent.contentType === 'article') {
-            requestStats.articlePages++;
-        } else if (structuredContent.contentType === 'cannabis-product') {
-            requestStats.productPages++;
-            // Save cannabis data for historical tracking
-            try {
-                const saveResult = cannabisTracker.saveProduct(structuredContent.cannabis);
-                console.log(`🌿 Cannabis data saved: strain_id=${saveResult.strain_id}`);
-            } catch (error) {
-                console.error('Failed to save cannabis data:', error);
-            }
-        }
-
-        const response = {
-            success: true,
-            url: result.url,
-            contentType: structuredContent.contentType,
-            data: structuredContent,
-            timestamp: new Date().toISOString(),
-            extractionMethod: useBrowser ? 'browser-emulation' : 'http-only',
-            browserEnabled: useBrowser,
-            processingTime: Date.now() - startTime,
-            metrics: result.metrics,
-            environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-        };
-
-        // Add Azure-specific metadata
-        if (IS_AZURE) {
-            response.azure = {
-                resourceOptimized: true,
-                memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
-                maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
-                timeoutSettings: azureConfig.browser.timeout + 'ms'
-            };
-        }
-
-        // Add screenshot to response if taken
-        if (takeScreenshot && result.screenshot) {
-            response.screenshot = {
-                data: result.screenshot.toString('base64'),
-                format: 'jpeg',
-                encoding: 'base64'
-            };
-        }
-
-        // Implement link following if requested
-        if (followLinks) {
-            try {
-                console.log(`🔗 Following links from ${url}...`);
-                const followResults = await followLinksAndExtract(url, result.html, {
-                    maxLinks: maxLinks,
-                    maxDepth: 1,
-                    linkFilter: linkFilter,
-                    timeout: IS_AZURE ? 20000 : 25000
-                });
-
-                // Extract cannabis products if this is a cannabis site
-                if (structuredContent.contentType === 'cannabis-product') {
-                    const cannabisProducts = extractCannabisProducts(followResults);
-
-                    // Save each cannabis product
-                    for (const product of cannabisProducts) {
-                        try {
-                            const saveResult = cannabisTracker.saveProduct(product);
-                            console.log(`🌿 Cannabis product saved: strain_id=${saveResult.strain_id}`);
-                        } catch (error) {
-                            console.error('Failed to save cannabis product:', error);
-                        }
-                    }
-
-                    response.linkedContent = {
-                        cannabis_products: cannabisProducts,
-                        summary: {
-                            total_links_found: followResults.totalLinksFound,
-                            links_processed: followResults.linksProcessed,
-                            cannabis_products_found: cannabisProducts.length,
-                            successful_extractions: followResults.successful,
-                            errors: followResults.errors
-                        }
-                    };
-                } else {
-                    response.linkedContent = followResults;
-                }
-
-                console.log(`✅ Link following complete: ${followResults.successful} pages processed`);
-            } catch (error) {
-                console.error('Link following failed:', error);
-                response.linkFollowingError = error.message;
-            }
-        }
-
-        // Track successful response
-        requestStats.successful++;
-        res.json(response);
-
-        console.log(`✅ Content extracted from ${url} in ${Date.now() - startTime}ms`);
-
-    } catch (error) {
-        console.error('❌ Request processing failed:', error);
-        requestStats.failed++;
-        
-        res.status(500).json({
-            success: false,
-            error: 'Internal server error',
-            details: error.message,
-            type: error.name,
-            environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-            suggestion: 'Check server logs for detailed error information'
-        });
+      targetUrl = new URL(url);
+      if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+        throw new Error('Only HTTP and HTTPS URLs are allowed');
+      }
+    } catch (urlError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid URL format',
+        details: urlError.message,
+        example: 'https://example.com/page'
+      });
     }
+
+    // Azure resource check for browser emulation
+    if (useBrowser && IS_AZURE) {
+      const memoryUsage = process.memoryUsage().rss / 1024 / 1024;
+      if (memoryUsage > 1200) {
+        console.warn(`⚠️ High memory usage (${memoryUsage.toFixed(0)}MB), disabling browser emulation`);
+
+        return res.status(503).json({
+          success: false,
+          error: 'Browser emulation temporarily unavailable due to resource constraints',
+          suggestion: 'Try again in a few minutes or use browser=false for HTTP-only extraction',
+          memoryUsage: memoryUsage.toFixed(0) + 'MB',
+          alternative: `${req.protocol}://${req.get('host')}/api/fetch-url?url=${encodeURIComponent(url)}&browser=false`
+        });
+      }
+    }
+
+    console.log(`🌐 Processing: ${url} (browser: ${useBrowser}, links: ${followLinks}, Azure: ${IS_AZURE})`);
+
+    let result;
+
+    if (useBrowser) {
+      // Use browser emulation for complex pages
+      try {
+        result = await fetchPageWithBrowser(url, {
+          handlePopups: true,
+          scrollToBottom: true,
+          takeScreenshot,
+          timeout: IS_AZURE ? 25000 : 30000
+        });
+
+        if (!result.success) {
+          console.error('🔴 Browser emulation failed:', result.error);
+          // Fallback to HTTP-only extraction
+          console.log('📡 Falling back to HTTP-only extraction...');
+          const axios = require('axios');
+          const response = await axios.get(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
+            },
+            timeout: 15000
+          });
+          result = {
+            success: true,
+            html: response.data,
+            title: url,
+            url,
+            fallback: true,
+            browserError: result.error
+          };
+        }
+      } catch (browserError) {
+        console.error('🔴 Browser setup failed:', browserError.message);
+        // Fallback to HTTP-only extraction
+        console.log('📡 Falling back to HTTP-only extraction...');
+        const axios = require('axios');
+        try {
+          const response = await axios.get(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
+            },
+            timeout: 15000
+          });
+          result = {
+            success: true,
+            html: response.data,
+            title: url,
+            url,
+            fallback: true,
+            browserError: browserError.message
+          };
+        } catch (httpError) {
+          throw new Error(`Both browser and HTTP extraction failed. Browser: ${browserError.message}, HTTP: ${httpError.message}`);
+        }
+      }
+    } else {
+      // Simple HTTP fetch fallback
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+      result = {
+        success: true,
+        html,
+        title: '',
+        url,
+        metrics: {
+          jsEnabled: false,
+          popupsHandled: 0,
+          environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+        }
+      };
+    }
+
+    // Extract structured content
+    const structuredContent = extractStructuredContent(result.html, url);
+
+    // Track content type for stats
+    if (structuredContent.contentType === 'product') {
+      requestStats.productPages++;
+    } else if (structuredContent.contentType === 'article') {
+      requestStats.articlePages++;
+    } else if (structuredContent.contentType === 'cannabis-product') {
+      requestStats.productPages++;
+      // Save cannabis data for historical tracking
+      try {
+        const saveResult = cannabisTracker.saveProduct(structuredContent.cannabis);
+        console.log(`🌿 Cannabis data saved: strain_id=${saveResult.strain_id}`);
+      } catch (error) {
+        console.error('Failed to save cannabis data:', error);
+      }
+    }
+
+    const response = {
+      success: true,
+      url: result.url,
+      contentType: structuredContent.contentType,
+      data: structuredContent,
+      timestamp: new Date().toISOString(),
+      extractionMethod: useBrowser ? 'browser-emulation' : 'http-only',
+      browserEnabled: useBrowser,
+      processingTime: Date.now() - startTime,
+      metrics: result.metrics,
+      environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+    };
+
+    // Add Azure-specific metadata
+    if (IS_AZURE) {
+      response.azure = {
+        resourceOptimized: true,
+        memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
+        maxConcurrentBrowsers: azureConfig.browser.maxConcurrent,
+        timeoutSettings: azureConfig.browser.timeout + 'ms'
+      };
+    }
+
+    // Add screenshot to response if taken
+    if (takeScreenshot && result.screenshot) {
+      response.screenshot = {
+        data: result.screenshot.toString('base64'),
+        format: 'jpeg',
+        encoding: 'base64'
+      };
+    }
+
+    // Implement link following if requested
+    if (followLinks) {
+      try {
+        console.log(`🔗 Following links from ${url}...`);
+        const followResults = await followLinksAndExtract(url, result.html, {
+          maxLinks,
+          maxDepth: 1,
+          linkFilter,
+          timeout: IS_AZURE ? 20000 : 25000
+        });
+
+        // Extract cannabis products if this is a cannabis site
+        if (structuredContent.contentType === 'cannabis-product') {
+          const cannabisProducts = extractCannabisProducts(followResults);
+
+          // Save each cannabis product
+          for (const product of cannabisProducts) {
+            try {
+              const saveResult = cannabisTracker.saveProduct(product);
+              console.log(`🌿 Cannabis product saved: strain_id=${saveResult.strain_id}`);
+            } catch (error) {
+              console.error('Failed to save cannabis product:', error);
+            }
+          }
+
+          response.linkedContent = {
+            cannabis_products: cannabisProducts,
+            summary: {
+              total_links_found: followResults.totalLinksFound,
+              links_processed: followResults.linksProcessed,
+              cannabis_products_found: cannabisProducts.length,
+              successful_extractions: followResults.successful,
+              errors: followResults.errors
+            }
+          };
+        } else {
+          response.linkedContent = followResults;
+        }
+
+        console.log(`✅ Link following complete: ${followResults.successful} pages processed`);
+      } catch (error) {
+        console.error('Link following failed:', error);
+        response.linkFollowingError = error.message;
+      }
+    }
+
+    // Track successful response
+    requestStats.successful++;
+    res.json(response);
+
+    console.log(`✅ Content extracted from ${url} in ${Date.now() - startTime}ms`);
+  } catch (error) {
+    console.error('❌ Request processing failed:', error);
+    requestStats.failed++;
+
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: error.message,
+      type: error.name,
+      environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+      suggestion: 'Check server logs for detailed error information'
+    });
+  }
 }
 
 // Specialized product endpoint
 app.get('/api/product', async (req, res) => {
-    const url = req.query.url;
-    if (!url) {
-        return res.status(400).json({
-            success: false,
-            error: 'URL parameter is required',
-            usage: 'GET /api/product?url=https://store.example.com/product/123',
-            note: IS_AZURE ? 'Optimized for Azure App Service resource limits' : 'Full extraction capabilities enabled'
-        });
+  const url = req.query.url;
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: 'URL parameter is required',
+      usage: 'GET /api/product?url=https://store.example.com/product/123',
+      note: IS_AZURE ? 'Optimized for Azure App Service resource limits' : 'Full extraction capabilities enabled'
+    });
+  }
+
+  try {
+    // Use the same extraction logic as the main endpoint
+    const extractionResult = await fetchPageWithBrowser(url, {
+      handlePopups: true,
+      scrollToBottom: true,
+      timeout: IS_AZURE ? 25000 : 30000
+    });
+
+    if (!extractionResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: extractionResult.error,
+        url
+      });
     }
-    
-    try {
-        // Use the same extraction logic as the main endpoint
-        const extractionResult = await fetchPageWithBrowser(url, {
-            handlePopups: true,
-            scrollToBottom: true,
-            timeout: IS_AZURE ? 25000 : 30000
-        });
 
-        if (!extractionResult.success) {
-            return res.status(500).json({
-                success: false,
-                error: extractionResult.error,
-                url: url
-            });
-        }
+    const structuredContent = extractStructuredContent(extractionResult.html, url);
 
-        const structuredContent = extractStructuredContent(extractionResult.html, url);
-
-        res.json({
-            success: true,
-            url: url,
-            contentType: structuredContent.contentType,
-            data: structuredContent,
-            timestamp: new Date().toISOString(),
-            environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-            extractionMethod: 'browser-emulation',
-            metrics: extractionResult.metrics
-        });
-    } catch (error) {
-        console.error('Product extraction failed:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-            url: url,
-            environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-        });
-    }
+    res.json({
+      success: true,
+      url,
+      contentType: structuredContent.contentType,
+      data: structuredContent,
+      timestamp: new Date().toISOString(),
+      environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+      extractionMethod: 'browser-emulation',
+      metrics: extractionResult.metrics
+    });
+  } catch (error) {
+    console.error('Product extraction failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      url,
+      environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+    });
+  }
 });
 
 // Enhanced extract endpoint for frontend compatibility
 async function handleExtract(req, res) {
-    const startTime = Date.now();
+  const startTime = Date.now();
 
-    try {
-        // Extract parameters from request body
-        const {
-            url,
-            enableBrowserEmulation = true,
-            followLinks = false,
-            maxDepth = 1,
-            maxLinksPerPage = 5
-        } = req.body;
+  try {
+    // Extract parameters from request body
+    const {
+      url,
+      enableBrowserEmulation = true,
+      followLinks = false,
+      maxDepth = 1,
+      maxLinksPerPage = 5
+    } = req.body;
 
-        if (!url) {
-            return res.status(400).json({
-                success: false,
-                error: 'URL is required',
-                usage: {
-                    url: 'Target URL (required)',
-                    enableBrowserEmulation: 'Enable browser emulation (default: true)',
-                    followLinks: 'Follow links (default: false)',
-                    maxDepth: 'Maximum link depth (default: 1)',
-                    maxLinksPerPage: 'Maximum links per page (default: 5)'
-                }
-            });
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL is required',
+        usage: {
+          url: 'Target URL (required)',
+          enableBrowserEmulation: 'Enable browser emulation (default: true)',
+          followLinks: 'Follow links (default: false)',
+          maxDepth: 'Maximum link depth (default: 1)',
+          maxLinksPerPage: 'Maximum links per page (default: 5)'
         }
-
-        // Validate URL
-        let targetUrl;
-        try {
-            targetUrl = new URL(url);
-            if (!['http:', 'https:'].includes(targetUrl.protocol)) {
-                throw new Error('Only HTTP and HTTPS URLs are allowed');
-            }
-        } catch (urlError) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid URL format',
-                details: urlError.message
-            });
-        }
-
-        console.log(`🌐 Extract request: ${url} (browser: ${enableBrowserEmulation}, links: ${followLinks})`);
-
-        let result;
-        let linkedContent = [];
-
-        if (enableBrowserEmulation) {
-            // Use browser emulation
-            result = await fetchPageWithBrowser(url, {
-                handlePopups: true,
-                scrollToBottom: true,
-                timeout: IS_AZURE ? 25000 : 30000
-            });
-
-            if (!result.success) {
-                throw new Error(result.error || 'Browser emulation failed');
-            }
-        } else {
-            // Simple HTTP fetch
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const html = await response.text();
-            result = {
-                success: true,
-                html: html,
-                title: '',
-                url: url,
-                metrics: {
-                    jsEnabled: false,
-                    popupsHandled: 0,
-                    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-                }
-            };
-        }
-
-        // Extract structured content from main page
-        const structuredContent = extractStructuredContent(result.html, url);
-
-        // TODO: Implement link following if requested
-        if (followLinks) {
-            // Placeholder for link following implementation
-            // This would extract links from the page and follow them up to maxDepth
-            linkedContent = []; // Will be populated when implemented
-        }
-
-        const response = {
-            success: true,
-            data: {
-                url: result.url,
-                title: structuredContent.title || result.title || 'No title found',
-                content: structuredContent.content || structuredContent.text || 'No content extracted',
-                metadata: {
-                    contentType: structuredContent.contentType,
-                    siteName: structuredContent.siteName,
-                    author: structuredContent.author,
-                    publishDate: structuredContent.publishDate,
-                    wordCount: structuredContent.wordCount,
-                    isNewsArticle: structuredContent.contentType === 'article',
-                    extractionMethod: enableBrowserEmulation ? 'browser-emulation' : 'http-only',
-                    processingTime: Date.now() - startTime,
-                    browserEnabled: enableBrowserEmulation,
-                    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-                },
-                linkedContent: linkedContent
-            },
-            timestamp: new Date().toISOString(),
-            metrics: result.metrics
-        };
-
-        // Add Azure-specific metadata
-        if (IS_AZURE) {
-            response.azure = {
-                resourceOptimized: true,
-                memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB'
-            };
-        }
-
-        // Track successful response
-        requestStats.successful++;
-        res.json(response);
-
-        console.log(`✅ Content extracted from ${url} in ${Date.now() - startTime}ms`);
-
-    } catch (error) {
-        console.error('❌ Extract request failed:', error);
-        requestStats.failed++;
-
-        res.status(500).json({
-            success: false,
-            error: 'Extraction failed',
-            details: error.message,
-            timestamp: new Date().toISOString(),
-            environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-        });
+      });
     }
+
+    // Validate URL
+    let targetUrl;
+    try {
+      targetUrl = new URL(url);
+      if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+        throw new Error('Only HTTP and HTTPS URLs are allowed');
+      }
+    } catch (urlError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid URL format',
+        details: urlError.message
+      });
+    }
+
+    console.log(`🌐 Extract request: ${url} (browser: ${enableBrowserEmulation}, links: ${followLinks})`);
+
+    let result;
+    let linkedContent = [];
+
+    if (enableBrowserEmulation) {
+      // Use browser emulation
+      result = await fetchPageWithBrowser(url, {
+        handlePopups: true,
+        scrollToBottom: true,
+        timeout: IS_AZURE ? 25000 : 30000
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Browser emulation failed');
+      }
+    } else {
+      // Simple HTTP fetch
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+      result = {
+        success: true,
+        html,
+        title: '',
+        url,
+        metrics: {
+          jsEnabled: false,
+          popupsHandled: 0,
+          environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+        }
+      };
+    }
+
+    // Extract structured content from main page
+    const structuredContent = extractStructuredContent(result.html, url);
+
+    // TODO: Implement link following if requested
+    if (followLinks) {
+      // Placeholder for link following implementation
+      // This would extract links from the page and follow them up to maxDepth
+      linkedContent = []; // Will be populated when implemented
+    }
+
+    const response = {
+      success: true,
+      data: {
+        url: result.url,
+        title: structuredContent.title || result.title || 'No title found',
+        content: structuredContent.content || structuredContent.text || 'No content extracted',
+        metadata: {
+          contentType: structuredContent.contentType,
+          siteName: structuredContent.siteName,
+          author: structuredContent.author,
+          publishDate: structuredContent.publishDate,
+          wordCount: structuredContent.wordCount,
+          isNewsArticle: structuredContent.contentType === 'article',
+          extractionMethod: enableBrowserEmulation ? 'browser-emulation' : 'http-only',
+          processingTime: Date.now() - startTime,
+          browserEnabled: enableBrowserEmulation,
+          environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+        },
+        linkedContent
+      },
+      timestamp: new Date().toISOString(),
+      metrics: result.metrics
+    };
+
+    // Add Azure-specific metadata
+    if (IS_AZURE) {
+      response.azure = {
+        resourceOptimized: true,
+        memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB'
+      };
+    }
+
+    // Track successful response
+    requestStats.successful++;
+    res.json(response);
+
+    console.log(`✅ Content extracted from ${url} in ${Date.now() - startTime}ms`);
+  } catch (error) {
+    console.error('❌ Extract request failed:', error);
+    requestStats.failed++;
+
+    res.status(500).json({
+      success: false,
+      error: 'Extraction failed',
+      details: error.message,
+      timestamp: new Date().toISOString(),
+      environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+    });
+  }
 };
 
 // Batch product tracking endpoint
 app.post('/api/track-products', (req, res) => {
-    const { urls, trackingId } = req.body;
-    const maxUrls = IS_AZURE ? 5 : 10;
-    
-    if (!urls || !Array.isArray(urls) || urls.length === 0) {
-        return res.status(400).json({
-            success: false,
-            error: 'URLs array is required',
-            usage: 'POST /api/track-products with body: {"urls": ["url1", "url2"], "trackingId": "optional"}',
-            maxUrls: maxUrls,
-            environment: IS_AZURE ? 'Azure App Service (reduced limits)' : 'Self-hosted'
-        });
-    }
-    
-    if (urls.length > maxUrls) {
-        return res.status(400).json({
-            success: false,
-            error: `Maximum ${maxUrls} URLs allowed per request`,
-            provided: urls.length,
-            maximum: maxUrls,
-            reason: IS_AZURE ? 'Azure App Service resource constraints' : 'Rate limiting'
-        });
-    }
-    
-    res.json({
-        success: true,
-        trackingId: trackingId || `track_${Date.now()}`,
-        summary: {
-            total: urls.length,
-            successful: 0,
-            failed: 0,
-            implementationStatus: 'Ready for batch processing implementation'
-        },
-        products: urls.map((url, index) => ({
-            url: url,
-            success: false,
-            message: 'Ready for extraction',
-            note: 'Use individual /api/fetch-url or /api/product endpoints for full extraction'
-        })),
-        timestamp: new Date().toISOString(),
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-        note: 'Batch processing available - process URLs individually through /api/fetch-url'
+  const { urls, trackingId } = req.body;
+  const maxUrls = IS_AZURE ? 5 : 10;
+
+  if (!urls || !Array.isArray(urls) || urls.length === 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'URLs array is required',
+      usage: 'POST /api/track-products with body: {"urls": ["url1", "url2"], "trackingId": "optional"}',
+      maxUrls,
+      environment: IS_AZURE ? 'Azure App Service (reduced limits)' : 'Self-hosted'
     });
+  }
+
+  if (urls.length > maxUrls) {
+    return res.status(400).json({
+      success: false,
+      error: `Maximum ${maxUrls} URLs allowed per request`,
+      provided: urls.length,
+      maximum: maxUrls,
+      reason: IS_AZURE ? 'Azure App Service resource constraints' : 'Rate limiting'
+    });
+  }
+
+  res.json({
+    success: true,
+    trackingId: trackingId || `track_${Date.now()}`,
+    summary: {
+      total: urls.length,
+      successful: 0,
+      failed: 0,
+      implementationStatus: 'Ready for batch processing implementation'
+    },
+    products: urls.map((url, index) => ({
+      url,
+      success: false,
+      message: 'Ready for extraction',
+      note: 'Use individual /api/fetch-url or /api/product endpoints for full extraction'
+    })),
+    timestamp: new Date().toISOString(),
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+    note: 'Batch processing available - process URLs individually through /api/fetch-url'
+  });
 });
 
 // Statistics endpoint
 app.get('/api/stats', (req, res) => {
-    const uptime = Math.floor((new Date() - requestStats.startTime) / 1000);
-    const memoryUsage = process.memoryUsage();
-    
-    res.json({
-        service: 'Gen Z Translator API - Statistics',
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
-        stats: {
-            ...requestStats,
-            uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
-            successRate: requestStats.total > 0 ? Math.round((requestStats.successful / requestStats.total) * 100) : 0,
-            browserUsageRate: requestStats.total > 0 ? Math.round((requestStats.browserRequests / requestStats.total) * 100) : 0,
-            averageRequestsPerMinute: requestStats.total > 0 ? Math.round((requestStats.total / (uptime / 60)) * 10) / 10 : 0
-        },
-        resources: {
-            memory: {
-                used: Math.round(memoryUsage.rss / 1024 / 1024),
-                heap: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-                external: Math.round(memoryUsage.external / 1024 / 1024)
-            },
-            nodeVersion: process.version,
-            platform: process.platform,
-            arch: process.arch
-        },
-        azureInfo: IS_AZURE ? {
-            platform: 'Azure App Service',
-            optimizations: [
-                'Reduced browser concurrency for resource management',
-                'Memory usage monitoring and warnings',
-                'Optimized request delays for stability',
-                'Azure-specific rate limits and timeouts'
-            ]
-        } : null,
-        implementationStatus: {
-            coreServer: 'Complete ✅',
-            browserEmulation: 'Complete ✅',
-            structuredExtraction: 'Complete ✅',
-            popupHandling: 'Complete ✅',
-            priceTracking: 'Complete ✅'
+  const uptime = Math.floor((new Date() - requestStats.startTime) / 1000);
+  const memoryUsage = process.memoryUsage();
+
+  res.json({
+    service: 'Gen Z Translator API - Statistics',
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted',
+    stats: {
+      ...requestStats,
+      uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
+      successRate: requestStats.total > 0 ? Math.round((requestStats.successful / requestStats.total) * 100) : 0,
+      browserUsageRate: requestStats.total > 0 ? Math.round((requestStats.browserRequests / requestStats.total) * 100) : 0,
+      averageRequestsPerMinute: requestStats.total > 0 ? Math.round((requestStats.total / (uptime / 60)) * 10) / 10 : 0
+    },
+    resources: {
+      memory: {
+        used: Math.round(memoryUsage.rss / 1024 / 1024),
+        heap: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+        external: Math.round(memoryUsage.external / 1024 / 1024)
+      },
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch
+    },
+    azureInfo: IS_AZURE
+      ? {
+          platform: 'Azure App Service',
+          optimizations: [
+            'Reduced browser concurrency for resource management',
+            'Memory usage monitoring and warnings',
+            'Optimized request delays for stability',
+            'Azure-specific rate limits and timeouts'
+          ]
         }
-    });
+      : null,
+    implementationStatus: {
+      coreServer: 'Complete ✅',
+      browserEmulation: 'Complete ✅',
+      structuredExtraction: 'Complete ✅',
+      popupHandling: 'Complete ✅',
+      priceTracking: 'Complete ✅'
+    }
+  });
 });
 
 // Examples endpoint
 app.get('/api/examples', (req, res) => {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    
-    res.json({
-        service: 'Gen Z Translator API - Usage Examples',
-        environment: IS_AZURE ? 'Azure App Service Optimized' : 'Self-hosted',
-        implementationStatus: 'Core server complete - Ready for extraction modules',
-        
-        basicUsage: {
-            description: 'Basic content extraction (ready for implementation)',
-            curl: `curl "${baseUrl}/api/fetch-url?url=https://example.com"`,
-            javascript: `
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  res.json({
+    service: 'Gen Z Translator API - Usage Examples',
+    environment: IS_AZURE ? 'Azure App Service Optimized' : 'Self-hosted',
+    implementationStatus: 'Core server complete - Ready for extraction modules',
+
+    basicUsage: {
+      description: 'Basic content extraction (ready for implementation)',
+      curl: `curl "${baseUrl}/api/fetch-url?url=https://example.com"`,
+      javascript: `
 const response = await fetch('${baseUrl}/api/fetch-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1187,338 +1189,340 @@ const response = await fetch('${baseUrl}/api/fetch-url', {
 });
 const data = await response.json();
 console.log(data);`
-        },
-        
-        browserEmulation: {
-            description: 'Browser emulation with popup handling (ready for implementation)',
-            example: `${baseUrl}/api/fetch-url?url=https://age-restricted-site.com&browser=true`,
-            features: [
-                'Automatic age verification (18+, 21+)',
-                'Cookie consent banner handling',
-                'Newsletter popup dismissal',
-                'GDPR compliance dialogs',
-                'JavaScript execution for dynamic content'
-            ]
-        },
-        
-        productExtraction: {
-            description: 'E-commerce product extraction (ready for implementation)',
-            example: `${baseUrl}/api/product?url=https://store.com/product/123`,
-            extractedData: [
-                'Product title and description',
-                'Current and original pricing',
-                'Availability and stock status',
-                'Product variants (size, color, etc.)',
-                'Customer reviews and ratings',
-                'Brand, SKU, and GTIN information'
-            ]
-        },
+    },
 
-        cannabisExtraction: {
-            description: 'Cannabis dispensary menu extraction with individual strain data',
-            example: `${baseUrl}/api/fetch-url`,
-            method: 'POST',
-            sampleRequest: {
-                url: 'https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu/?refinementList[root_types][]=flower',
-                browser: true,
-                followLinks: true,
-                maxLinks: 5
-            },
-            extractedData: [
-                'Individual strain names and genetics',
-                'THC/CBD potency percentages',
-                'Strain types (Indica, Sativa, Hybrid)',
-                'Pricing by weight and bulk options',
-                'Availability and stock levels',
-                'Dispensary location and license info',
-                'Effects and medical uses',
-                'Customer ratings and reviews'
-            ],
-            sampleOutput: {
-                contentType: 'cannabis-product',
-                linkedContent: {
-                    cannabis_products: [
-                        {
-                            strain: { name: 'Animal Face', type: 'indica' },
-                            potency: { thc: { percentage: 27.0 }, cbd: { percentage: 0.5 } },
-                            pricing: { current_price: 150, currency: '$' },
-                            dispensary: { name: 'RISE Cannabis', location: { state: 'minnesota', city: 'new hope' } }
-                        }
-                    ],
-                    summary: {
-                        total_links_found: 32,
-                        cannabis_products_found: 5,
-                        successful_extractions: 5
-                    }
-                }
+    browserEmulation: {
+      description: 'Browser emulation with popup handling (ready for implementation)',
+      example: `${baseUrl}/api/fetch-url?url=https://age-restricted-site.com&browser=true`,
+      features: [
+        'Automatic age verification (18+, 21+)',
+        'Cookie consent banner handling',
+        'Newsletter popup dismissal',
+        'GDPR compliance dialogs',
+        'JavaScript execution for dynamic content'
+      ]
+    },
+
+    productExtraction: {
+      description: 'E-commerce product extraction (ready for implementation)',
+      example: `${baseUrl}/api/product?url=https://store.com/product/123`,
+      extractedData: [
+        'Product title and description',
+        'Current and original pricing',
+        'Availability and stock status',
+        'Product variants (size, color, etc.)',
+        'Customer reviews and ratings',
+        'Brand, SKU, and GTIN information'
+      ]
+    },
+
+    cannabisExtraction: {
+      description: 'Cannabis dispensary menu extraction with individual strain data',
+      example: `${baseUrl}/api/fetch-url`,
+      method: 'POST',
+      sampleRequest: {
+        url: 'https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu/?refinementList[root_types][]=flower',
+        browser: true,
+        followLinks: true,
+        maxLinks: 5
+      },
+      extractedData: [
+        'Individual strain names and genetics',
+        'THC/CBD potency percentages',
+        'Strain types (Indica, Sativa, Hybrid)',
+        'Pricing by weight and bulk options',
+        'Availability and stock levels',
+        'Dispensary location and license info',
+        'Effects and medical uses',
+        'Customer ratings and reviews'
+      ],
+      sampleOutput: {
+        contentType: 'cannabis-product',
+        linkedContent: {
+          cannabis_products: [
+            {
+              strain: { name: 'Animal Face', type: 'indica' },
+              potency: { thc: { percentage: 27.0 }, cbd: { percentage: 0.5 } },
+              pricing: { current_price: 150, currency: '$' },
+              dispensary: { name: 'RISE Cannabis', location: { state: 'minnesota', city: 'new hope' } }
             }
-        },
-        
-        batchTracking: {
-            description: 'Batch product tracking for price monitoring',
-            curl: `curl -X POST "${baseUrl}/api/track-products" -H "Content-Type: application/json" -d '{
+          ],
+          summary: {
+            total_links_found: 32,
+            cannabis_products_found: 5,
+            successful_extractions: 5
+          }
+        }
+      }
+    },
+
+    batchTracking: {
+      description: 'Batch product tracking for price monitoring',
+      curl: `curl -X POST "${baseUrl}/api/track-products" -H "Content-Type: application/json" -d '{
     "urls": ["https://store1.com/product1", "https://store2.com/product2"],
     "trackingId": "daily-price-check"
 }'`,
-            useCase: 'Perfect for building price comparison and monitoring applications'
-        },
-        
-        azureOptimizations: IS_AZURE ? {
-            resourceLimits: `Limited to ${azureConfig.browser.maxConcurrent} concurrent browsers for optimal performance`,
-            batchProcessing: `Maximum ${IS_AZURE ? 5 : 10} URLs per batch request`,
-            timeouts: 'Optimized timeouts for Azure App Service environment',
-            rateLimiting: 'Conservative limits to prevent resource exhaustion',
-            memoryManagement: 'Automatic monitoring and cleanup processes'
-        } : null,
-        
-        status: [
-            '✅ Server is running and operational',
-            '✅ Browser emulation with Puppeteer active',
-            '✅ Structured content extraction enabled',
-            '✅ Popup handling automation working',
-            '✅ E-commerce product detection active',
-            '✅ Ready for production use'
-        ],
-        
-        cannabisAnalytics: {
-            description: 'Cannabis strain tracking and analytics endpoints',
-            endpoints: {
-                searchStrains: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=20`,
-                strainDetails: `${baseUrl}/api/cannabis/strains/{strain_id}`,
-                priceTrends: `${baseUrl}/api/cannabis/trends?days=30`,
-                analytics: `${baseUrl}/api/cannabis/analytics`,
-                exportData: `${baseUrl}/api/cannabis/export`
-            },
-            sampleQueries: {
-                highPotencyIndicas: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=25`,
-                budgetStrains: `${baseUrl}/api/cannabis/strains?price_max=60`,
-                riseDispensary: `${baseUrl}/api/cannabis/strains?dispensary=RISE`,
-                recentTrends: `${baseUrl}/api/cannabis/trends?days=7`
-            },
-            useCases: [
-                'Track price changes over time for specific strains',
-                'Monitor when new high-potency strains become available',
-                'Compare pricing across different dispensaries',
-                'Alert when favorite strains go on sale',
-                'Analyze potency trends in the market',
-                'Export data for external analysis tools'
-            ]
-        },
+      useCase: 'Perfect for building price comparison and monitoring applications'
+    },
 
-        testEndpoints: {
-            health: `${baseUrl}/health`,
-            apiInfo: `${baseUrl}/api`,
-            stats: `${baseUrl}/api/stats`,
-            testExtraction: `${baseUrl}/api/fetch-url?url=https://example.com&browser=true`,
-            cannabisExample: `${baseUrl}/api/fetch-url`,
-            cannabisSearch: `${baseUrl}/api/cannabis/strains`,
-            cannabisAnalytics: `${baseUrl}/api/cannabis/analytics`
+    azureOptimizations: IS_AZURE
+      ? {
+          resourceLimits: `Limited to ${azureConfig.browser.maxConcurrent} concurrent browsers for optimal performance`,
+          batchProcessing: `Maximum ${IS_AZURE ? 5 : 10} URLs per batch request`,
+          timeouts: 'Optimized timeouts for Azure App Service environment',
+          rateLimiting: 'Conservative limits to prevent resource exhaustion',
+          memoryManagement: 'Automatic monitoring and cleanup processes'
         }
-    });
+      : null,
+
+    status: [
+      '✅ Server is running and operational',
+      '✅ Browser emulation with Puppeteer active',
+      '✅ Structured content extraction enabled',
+      '✅ Popup handling automation working',
+      '✅ E-commerce product detection active',
+      '✅ Ready for production use'
+    ],
+
+    cannabisAnalytics: {
+      description: 'Cannabis strain tracking and analytics endpoints',
+      endpoints: {
+        searchStrains: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=20`,
+        strainDetails: `${baseUrl}/api/cannabis/strains/{strain_id}`,
+        priceTrends: `${baseUrl}/api/cannabis/trends?days=30`,
+        analytics: `${baseUrl}/api/cannabis/analytics`,
+        exportData: `${baseUrl}/api/cannabis/export`
+      },
+      sampleQueries: {
+        highPotencyIndicas: `${baseUrl}/api/cannabis/strains?type=indica&thc_min=25`,
+        budgetStrains: `${baseUrl}/api/cannabis/strains?price_max=60`,
+        riseDispensary: `${baseUrl}/api/cannabis/strains?dispensary=RISE`,
+        recentTrends: `${baseUrl}/api/cannabis/trends?days=7`
+      },
+      useCases: [
+        'Track price changes over time for specific strains',
+        'Monitor when new high-potency strains become available',
+        'Compare pricing across different dispensaries',
+        'Alert when favorite strains go on sale',
+        'Analyze potency trends in the market',
+        'Export data for external analysis tools'
+      ]
+    },
+
+    testEndpoints: {
+      health: `${baseUrl}/health`,
+      apiInfo: `${baseUrl}/api`,
+      stats: `${baseUrl}/api/stats`,
+      testExtraction: `${baseUrl}/api/fetch-url?url=https://example.com&browser=true`,
+      cannabisExample: `${baseUrl}/api/fetch-url`,
+      cannabisSearch: `${baseUrl}/api/cannabis/strains`,
+      cannabisAnalytics: `${baseUrl}/api/cannabis/analytics`
+    }
+  });
 });
 
 // Cannabis tracking and analytics endpoints
 app.get('/api/cannabis/strains', (req, res) => {
-    try {
-        const criteria = {
-            name: req.query.name,
-            type: req.query.type, // indica, sativa, hybrid
-            thc_min: req.query.thc_min ? parseFloat(req.query.thc_min) : undefined,
-            thc_max: req.query.thc_max ? parseFloat(req.query.thc_max) : undefined,
-            dispensary: req.query.dispensary
-        };
+  try {
+    const criteria = {
+      name: req.query.name,
+      type: req.query.type, // indica, sativa, hybrid
+      thc_min: req.query.thc_min ? parseFloat(req.query.thc_min) : undefined,
+      thc_max: req.query.thc_max ? parseFloat(req.query.thc_max) : undefined,
+      dispensary: req.query.dispensary
+    };
 
-        const strains = cannabisTracker.searchStrains(criteria);
+    const strains = cannabisTracker.searchStrains(criteria);
 
-        res.json({
-            success: true,
-            total: strains.length,
-            strains: strains,
-            filters_applied: criteria,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Failed to search strains',
-            details: error.message
-        });
-    }
+    res.json({
+      success: true,
+      total: strains.length,
+      strains,
+      filters_applied: criteria,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search strains',
+      details: error.message
+    });
+  }
 });
 
 // Get specific strain details with history
 app.get('/api/cannabis/strains/:strainId', (req, res) => {
-    try {
-        const { strainId } = req.params;
-        const strain = cannabisTracker.getStrain(strainId);
+  try {
+    const { strainId } = req.params;
+    const strain = cannabisTracker.getStrain(strainId);
 
-        if (!strain) {
-            return res.status(404).json({
-                success: false,
-                error: 'Strain not found',
-                strain_id: strainId
-            });
-        }
-
-        const priceHistory = cannabisTracker.getPriceHistory(strainId);
-        const availabilityHistory = cannabisTracker.getAvailabilityHistory(strainId);
-        const priceTrends = cannabisTracker.getPriceTrends(strainId, 30);
-
-        res.json({
-            success: true,
-            strain: strain,
-            history: {
-                price: priceHistory,
-                availability: availabilityHistory,
-                trends: priceTrends
-            },
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Failed to get strain details',
-            details: error.message
-        });
+    if (!strain) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strain not found',
+        strain_id: strainId
+      });
     }
+
+    const priceHistory = cannabisTracker.getPriceHistory(strainId);
+    const availabilityHistory = cannabisTracker.getAvailabilityHistory(strainId);
+    const priceTrends = cannabisTracker.getPriceTrends(strainId, 30);
+
+    res.json({
+      success: true,
+      strain,
+      history: {
+        price: priceHistory,
+        availability: availabilityHistory,
+        trends: priceTrends
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get strain details',
+      details: error.message
+    });
+  }
 });
 
 // Get price trends for multiple strains
 app.get('/api/cannabis/trends', (req, res) => {
-    try {
-        const type = req.query.type; // indica, sativa, hybrid
-        const days = parseInt(req.query.days) || 30;
+  try {
+    const type = req.query.type; // indica, sativa, hybrid
+    const days = parseInt(req.query.days) || 30;
 
-        let strains;
-        if (type) {
-            strains = cannabisTracker.getStrainsByType(type);
-        } else {
-            strains = cannabisTracker.getAllStrains();
-        }
-
-        const trends = strains.slice(0, 20).map(strain => {
-            const priceTrend = cannabisTracker.getPriceTrends(strain.id, days);
-            return {
-                strain_id: strain.id,
-                name: strain.name,
-                type: strain.type || 'unknown',
-                dispensary: strain.dispensary,
-                trend: priceTrend
-            };
-        });
-
-        res.json({
-            success: true,
-            period_days: days,
-            filter_type: type || 'all',
-            trends: trends,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Failed to get price trends',
-            details: error.message
-        });
+    let strains;
+    if (type) {
+      strains = cannabisTracker.getStrainsByType(type);
+    } else {
+      strains = cannabisTracker.getAllStrains();
     }
+
+    const trends = strains.slice(0, 20).map(strain => {
+      const priceTrend = cannabisTracker.getPriceTrends(strain.id, days);
+      return {
+        strain_id: strain.id,
+        name: strain.name,
+        type: strain.type || 'unknown',
+        dispensary: strain.dispensary,
+        trend: priceTrend
+      };
+    });
+
+    res.json({
+      success: true,
+      period_days: days,
+      filter_type: type || 'all',
+      trends,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get price trends',
+      details: error.message
+    });
+  }
 });
 
 // Cannabis analytics dashboard
 app.get('/api/cannabis/analytics', (req, res) => {
-    try {
-        const analytics = cannabisTracker.getAnalyticsSummary();
+  try {
+    const analytics = cannabisTracker.getAnalyticsSummary();
 
-        res.json({
-            success: true,
-            analytics: analytics,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Failed to get analytics',
-            details: error.message
-        });
-    }
+    res.json({
+      success: true,
+      analytics,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get analytics',
+      details: error.message
+    });
+  }
 });
 
 // Export cannabis data (for backup/analysis)
 app.get('/api/cannabis/export', (req, res) => {
-    try {
-        const data = cannabisTracker.exportData();
+  try {
+    const data = cannabisTracker.exportData();
 
-        res.json({
-            success: true,
-            data: data,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            error: 'Failed to export data',
-            details: error.message
-        });
-    }
+    res.json({
+      success: true,
+      data,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to export data',
+      details: error.message
+    });
+  }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('❌ Unhandled error:', err);
-    
-    const errorResponse = {
-        success: false,
-        error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
-        timestamp: new Date().toISOString(),
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-    };
+  console.error('❌ Unhandled error:', err);
 
-    if (IS_AZURE) {
-        errorResponse.azureNote = 'Check Azure App Service logs for detailed error information';
-    }
+  const errorResponse = {
+    success: false,
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    timestamp: new Date().toISOString(),
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+  };
 
-    res.status(500).json(errorResponse);
+  if (IS_AZURE) {
+    errorResponse.azureNote = 'Check Azure App Service logs for detailed error information';
+  }
+
+  res.status(500).json(errorResponse);
 });
 
 // 404 handler
 app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'Endpoint not found',
-        availableEndpoints: [
-            'GET /',
-            'GET /health',
-            'GET /api',
-            'GET /api/fetch-url?url=<URL>',
-            'POST /api/fetch-url',
-            'GET /api/product?url=<URL>',
-            'POST /api/track-products',
-            'GET /api/stats',
-            'GET /api/examples'
-        ],
-        documentation: 'Visit /api/examples for detailed usage information',
-        environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
-    });
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint not found',
+    availableEndpoints: [
+      'GET /',
+      'GET /health',
+      'GET /api',
+      'GET /api/fetch-url?url=<URL>',
+      'POST /api/fetch-url',
+      'GET /api/product?url=<URL>',
+      'POST /api/track-products',
+      'GET /api/stats',
+      'GET /api/examples'
+    ],
+    documentation: 'Visit /api/examples for detailed usage information',
+    environment: IS_AZURE ? 'Azure App Service' : 'Self-hosted'
+  });
 });
 
 // Graceful shutdown handling (important for Azure)
 const shutdown = async (signal) => {
-    console.log(`🛑 Received ${signal}, shutting down gracefully...`);
-    
-    // Future: Close browser instances when implemented
-    // if (global.browserInstance) {
-    //     try {
-    //         await global.browserInstance.close();
-    //         console.log('🤖 Browser instances closed');
-    //     } catch (error) {
-    //         console.error('Error closing browser:', error.message);
-    //     }
-    // }
-    
-    setTimeout(() => {
-        console.log('✅ Shutdown complete');
-        process.exit(0);
-    }, 2000);
+  console.log(`🛑 Received ${signal}, shutting down gracefully...`);
+
+  // Future: Close browser instances when implemented
+  // if (global.browserInstance) {
+  //     try {
+  //         await global.browserInstance.close();
+  //         console.log('🤖 Browser instances closed');
+  //     } catch (error) {
+  //         console.error('Error closing browser:', error.message);
+  //     }
+  // }
+
+  setTimeout(() => {
+    console.log('✅ Shutdown complete');
+    process.exit(0);
+  }, 2000);
 };
 
 process.on('SIGINT', () => shutdown('SIGINT'));
@@ -1526,44 +1530,44 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Azure App Service sends SIGTERM for graceful shutdowns
 if (IS_AZURE) {
-    process.on('message', (msg) => {
-        if (msg === 'shutdown') {
-            shutdown('Azure shutdown message');
-        }
-    });
+  process.on('message', (msg) => {
+    if (msg === 'shutdown') {
+      shutdown('Azure shutdown message');
+    }
+  });
 }
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`🚀 Gen Z Translator API v3.0 running on port ${PORT}`);
-    console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : process.env.NODE_ENV || 'development'}`);
-    console.log(`✨ Status: Core server operational, ready for extraction modules`);
-    
-    if (IS_AZURE) {
-        console.log(`🔧 Azure Optimizations: Enabled`);
-        console.log(`📊 Resource Limits: ${azureConfig.browser.maxConcurrent} browsers, ${azureConfig.browser.timeout}ms timeout`);
-        console.log(`⚡ Rate Limits: ${azureConfig.rateLimiting.standardMax}/15min standard, ${azureConfig.rateLimiting.browserMax}/15min browser`);
-        console.log(`🌐 Site URL: https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`);
-    } else {
-        console.log(`🏠 Local URL: http://localhost:${PORT}`);
-    }
-    
-    console.log(`💊 Health Check: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/health`);
-    console.log(`📖 API Documentation: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/api/examples`);
-    console.log(`🎯 Interactive Frontend: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}`);
-    
-    console.log('');
-    console.log('✅ Implementation Status:');
-    console.log('  ✅ Core Express server with Azure optimization');
-    console.log('  ✅ Rate limiting and security middleware');
-    console.log('  ✅ Health checks and monitoring endpoints');
-    console.log('  ✅ Interactive frontend interface');
-    console.log('  ✅ CORS configuration for your domains');
-    console.log('  ✅ Browser emulation with Puppeteer active');
-    console.log('  ✅ Structured content extraction enabled');
-    console.log('  ✅ Popup handling automation working');
-    console.log('');
-    console.log('🚀 All features enabled and ready for production use!');
+  console.log(`🚀 Gen Z Translator API v3.0 running on port ${PORT}`);
+  console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : process.env.NODE_ENV || 'development'}`);
+  console.log('✨ Status: Core server operational, ready for extraction modules');
+
+  if (IS_AZURE) {
+    console.log('🔧 Azure Optimizations: Enabled');
+    console.log(`📊 Resource Limits: ${azureConfig.browser.maxConcurrent} browsers, ${azureConfig.browser.timeout}ms timeout`);
+    console.log(`⚡ Rate Limits: ${azureConfig.rateLimiting.standardMax}/15min standard, ${azureConfig.rateLimiting.browserMax}/15min browser`);
+    console.log(`🌐 Site URL: https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`);
+  } else {
+    console.log(`🏠 Local URL: http://localhost:${PORT}`);
+  }
+
+  console.log(`💊 Health Check: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/health`);
+  console.log(`📖 API Documentation: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/api/examples`);
+  console.log(`🎯 Interactive Frontend: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}`);
+
+  console.log('');
+  console.log('✅ Implementation Status:');
+  console.log('  ✅ Core Express server with Azure optimization');
+  console.log('  ✅ Rate limiting and security middleware');
+  console.log('  ✅ Health checks and monitoring endpoints');
+  console.log('  ✅ Interactive frontend interface');
+  console.log('  ✅ CORS configuration for your domains');
+  console.log('  ✅ Browser emulation with Puppeteer active');
+  console.log('  ✅ Structured content extraction enabled');
+  console.log('  ✅ Popup handling automation working');
+  console.log('');
+  console.log('🚀 All features enabled and ready for production use!');
 });
 
 module.exports = app;

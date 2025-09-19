@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-09-19T13:39:53Z",
+  "version": "3.0.0",
+  "git_sha": "943cfabc8841ab2fc35817e5a5a4ee7b050fe93e",
+  "validation_results": {
+    "passed": 9,
+    "failed": 2,
+    "warnings": 3,
+    "total": 14
+  },
+  "security_status": "REJECTED",
+  "details": [
+  "✅ No vulnerabilities found (npm audit)",
+  "✅ 633 packages have verified signatures",
+  "⚠️ 0",
+  "0 packages have available updates",
+  "✅ No secrets detected (Checkov scan)",
+  "❌ Potential secrets found - manual review required",
+  "✅ .env files properly excluded from git",
+  "✅ Secure browser launch options configured",
+  "✅ Webdriver detection measures implemented",
+  "✅ Package lock file exists",
+  "✅ Dependencies properly pinned",
+  "❌ ESLint security rules failed",
+  "⚠️      105 console.log statements found (review for sensitive data)",
+  "⚠️ Production environment configuration not explicitly found",
+  "✅ HTTPS references found in server configuration"
+]
+}
