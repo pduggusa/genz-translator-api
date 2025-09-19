@@ -34,7 +34,10 @@
     "clean": "rm -rf node_modules package-lock.json coverage",
     "reinstall": "npm run clean && npm install",
     "postinstall": "npx playwright install firefox --with-deps",
-    "validate:production": "NODE_ENV=production npm run test:security && npm run security:audit"
+    "validate:production": "NODE_ENV=production npm run test:security && npm run security:audit",
+    "build:fast": "./scripts/fast-local-build.sh",
+    "build:container": "./scripts/fast-container-build.sh",
+    "build:optimized": "docker build -f Dockerfile.containerapp.optimized -t cannabis-extractor:local ."
   },
   "keywords": [
     "web-scraping",
