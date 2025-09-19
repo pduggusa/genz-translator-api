@@ -8,7 +8,7 @@ const { extractStructuredContent } = require('./structured-extractor');
 /**
  * Extract product links from a dispensary menu page
  */
-function extractProductLinks(html, baseUrl) {
+function extractProductLinks (html, baseUrl) {
   const $ = cheerio.load(html);
   const links = new Set();
 
@@ -44,7 +44,7 @@ function extractProductLinks(html, baseUrl) {
 /**
  * Check if a link looks like a cannabis product page
  */
-function isValidProductLink(href, baseUrl) {
+function isValidProductLink (href, _baseUrl) {
   if (!href) return false;
 
   // Skip non-product links
@@ -82,7 +82,7 @@ function isValidProductLink(href, baseUrl) {
 /**
  * Resolve relative URLs to absolute URLs
  */
-function resolveUrl(href, baseUrl) {
+function resolveUrl (href, baseUrl) {
   try {
     if (href.startsWith('http')) {
       return href;
@@ -109,10 +109,10 @@ function resolveUrl(href, baseUrl) {
 /**
  * Follow links and extract cannabis product data
  */
-async function followLinksAndExtract(baseUrl, baseHtml, options = {}) {
+async function followLinksAndExtract (baseUrl, baseHtml, options = {}) {
   const {
     maxLinks = 10,
-    maxDepth = 1,
+    // maxDepth = 1, // Reserved for future multi-level crawling
     linkFilter = 'same-domain',
     timeout = 30000
   } = options;
@@ -145,7 +145,7 @@ async function followLinksAndExtract(baseUrl, baseHtml, options = {}) {
     const batch = linksToProcess.slice(i, i + batchSize);
     console.log(`📦 Processing batch ${Math.floor(i / batchSize) + 1}: ${batch.length} links`);
 
-    const batchPromises = batch.map(async (url, index) => {
+    const batchPromises = batch.map(async (url, _index) => {
       try {
         console.log(`  🌐 Fetching: ${url}`);
 
@@ -213,7 +213,7 @@ async function followLinksAndExtract(baseUrl, baseHtml, options = {}) {
 /**
  * Filter links based on domain policy
  */
-function filterLinksByDomain(links, baseUrl, linkFilter) {
+function filterLinksByDomain (links, baseUrl, linkFilter) {
   if (linkFilter === 'all') {
     return links;
   }
@@ -243,7 +243,7 @@ function filterLinksByDomain(links, baseUrl, linkFilter) {
 /**
  * Extract domain from hostname (removes subdomains)
  */
-function extractDomain(hostname) {
+function extractDomain (hostname) {
   const parts = hostname.split('.');
   if (parts.length >= 2) {
     return parts.slice(-2).join('.');
@@ -254,7 +254,7 @@ function extractDomain(hostname) {
 /**
  * Extract cannabis products from followed links
  */
-function extractCannabisProducts(followResults) {
+function extractCannabisProducts (followResults) {
   if (!followResults.results) {
     return [];
   }

@@ -1,12 +1,12 @@
 // src/extractors/cannabis-extractor.js
 // Specialized Cannabis Product Data Extractor for Strain Tracking & Historical Analysis
 
-const cheerio = require('cheerio');
+// Cheerio removed - not used in this module
 
 /**
  * Enhanced Cannabis Product Data Structure for Historical Tracking
  */
-function createCannabisDataStructure() {
+function createCannabisDataStructure () {
   return {
     // Core product identification
     strain: {
@@ -115,7 +115,7 @@ function createCannabisDataStructure() {
 /**
  * Detect if a page contains cannabis products
  */
-function isCannabisContent(html, $) {
+function isCannabisContent (html, _$) {
   const cannabisIndicators = [
     // Cannabis-specific terms in content
     /\b(?:thc|cbd|indica|sativa|hybrid|strain|cannabis|marijuana|dispensary|budtender)\b/i,
@@ -142,7 +142,7 @@ function isCannabisContent(html, $) {
 /**
  * Extract comprehensive cannabis product data
  */
-function extractCannabisData(html, $, url) {
+function extractCannabisData (html, $, url) {
   const data = createCannabisDataStructure();
 
   // Set extraction metadata
@@ -178,10 +178,10 @@ function extractCannabisData(html, $, url) {
 /**
  * Extract dispensary and location information
  */
-function extractDispensaryInfo($, data, url) {
+function extractDispensaryInfo ($, data, url) {
   // Extract from URL
   if (url) {
-    const urlMatch = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+    const urlMatch = url.match(/(?:https?:\/\/)?(?:www\.)?([^/]+)/);
     if (urlMatch) {
       const domain = urlMatch[1];
 
@@ -204,7 +204,7 @@ function extractDispensaryInfo($, data, url) {
     }
 
     // Extract city
-    const cityMatch = url.match(/\/(?:dispensaries?\/[^\/]+\/)([a-z-]+)(?:\/|$)/i);
+    const cityMatch = url.match(/\/(?:dispensaries?\/[^/]+\/)([a-z-]+)(?:\/|$)/i);
     if (cityMatch) {
       data.dispensary.location.city = cityMatch[1].replace(/-/g, ' ');
     }
@@ -250,7 +250,7 @@ function extractDispensaryInfo($, data, url) {
 /**
  * Extract strain information
  */
-function extractStrainInfo($, data, html) {
+function extractStrainInfo ($, data, html) {
   // Extract strain names from product listings
   const strainSelectors = [
     '[class*="strain"] h1, [class*="strain"] h2, [class*="strain"] h3',
@@ -313,7 +313,7 @@ function extractStrainInfo($, data, html) {
 /**
  * Extract potency data (THC, CBD, terpenes)
  */
-function extractPotencyData($, data, html) {
+function extractPotencyData ($, data, html) {
   // THC extraction patterns
   const thcPatterns = [
     /thc[:\s]*(\d+(?:\.\d+)?)%/gi,
@@ -410,7 +410,7 @@ function extractPotencyData($, data, html) {
 /**
  * Extract product details
  */
-function extractProductDetails($, data) {
+function extractProductDetails ($, data) {
   // Product form detection
   const formPatterns = [
     /\b(flower|bud|pre-roll|joint|blunt)\b/i,
@@ -462,7 +462,7 @@ function extractProductDetails($, data) {
 /**
  * Extract pricing information for historical tracking
  */
-function extractPricingInfo($, data) {
+function extractPricingInfo ($, data) {
   // Price selectors specific to cannabis sites
   const priceSelectors = [
     '[class*="price"]:not([class*="original"]):not([class*="was"])',
@@ -512,7 +512,7 @@ function extractPricingInfo($, data) {
 /**
  * Extract availability information
  */
-function extractAvailabilityInfo($, data) {
+function extractAvailabilityInfo ($, data) {
   // Stock indicators
   const stockSelectors = [
     '[class*="stock"], [class*="inventory"]',
@@ -552,7 +552,7 @@ function extractAvailabilityInfo($, data) {
 /**
  * Extract effects and reviews
  */
-function extractEffectsAndReviews($, data) {
+function extractEffectsAndReviews ($, data) {
   // Common cannabis effects
   const effectTerms = [
     'relaxing', 'euphoric', 'uplifting', 'energizing', 'calming', 'creative',
@@ -587,19 +587,19 @@ function extractEffectsAndReviews($, data) {
 }
 
 // Helper functions
-function extractPrice(text) {
+function extractPrice (text) {
   if (!text) return null;
   const priceMatch = text.match(/\$?(\d+(?:\.\d{2})?)/);
   return priceMatch ? parseFloat(priceMatch[1]) : null;
 }
 
-function extractCurrency(text) {
+function extractCurrency (text) {
   if (!text) return 'USD';
   const currencyMatch = text.match(/[$€£¥₹]|USD|EUR|GBP|JPY|INR/);
   return currencyMatch ? currencyMatch[0] : 'USD';
 }
 
-function convertToGrams(weightStr) {
+function convertToGrams (weightStr) {
   if (!weightStr) return null;
 
   const match = weightStr.match(/(\d+(?:\.\d+)?)\s*(g|gram|grams|oz|ounce|ounces)/i);

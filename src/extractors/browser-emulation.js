@@ -13,7 +13,7 @@ const IS_AZURE = !!(
     process.env.WEBSITE_RESOURCE_GROUP
 );
 
-async function getBrowserInstance() {
+async function getBrowserInstance () {
   if (!browserInstance || !browserInstance.isConnected()) {
     console.log('🚀 Starting new Firefox browser instance...');
 
@@ -101,7 +101,7 @@ async function getBrowserInstance() {
 }
 
 // Enhanced page setup with realistic browser behavior for Playwright
-async function setupPage(browser) {
+async function setupPage (browser) {
   // Create browser context with user agent
   const context = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0',
@@ -127,8 +127,8 @@ async function setupPage(browser) {
 
   // Override webdriver detection
   await page.addInitScript(() => {
-    // Remove webdriver property
-    delete navigator.__proto__.webdriver;
+    // Remove webdriver property using secure method
+    Object.setPrototypeOf(navigator, null);
 
     // Mock Firefox-specific objects
     window.InstallTrigger = {};
@@ -153,7 +153,7 @@ async function setupPage(browser) {
 }
 
 // Comprehensive popup and overlay handler
-async function handlePopupsAndOverlays(page) {
+async function handlePopupsAndOverlays (page) {
   console.log('🔍 Checking for popups and overlays...');
 
   try {
@@ -324,7 +324,7 @@ async function handlePopupsAndOverlays(page) {
 }
 
 // Enhanced page content extraction with browser emulation
-async function fetchPageWithBrowser(url, options = {}) {
+async function fetchPageWithBrowser (url, options = {}) {
   const {
     waitForSelector = null,
     waitTime = IS_AZURE ? 3000 : 5000,
@@ -435,7 +435,7 @@ async function fetchPageWithBrowser(url, options = {}) {
 }
 
 // Auto-scroll to trigger lazy loading
-async function autoScroll(page) {
+async function autoScroll (page) {
   await page.evaluate(async () => {
     await new Promise((resolve) => {
       let totalHeight = 0;
@@ -459,7 +459,7 @@ async function autoScroll(page) {
 }
 
 // Extract links from HTML for deep linking
-function extractLinksFromHtml(html, baseUrl, linkFilter = 'same-domain') {
+function extractLinksFromHtml (html, baseUrl, linkFilter = 'same-domain') {
   const links = [];
   const baseUrlObj = new URL(baseUrl);
 
@@ -532,7 +532,7 @@ function extractLinksFromHtml(html, baseUrl, linkFilter = 'same-domain') {
 }
 
 // Helper function to identify non-content links
-function isNonContentLink(url, linkText) {
+function isNonContentLink (url, linkText) {
   const nonContentPatterns = [
     /\.(jpg|jpeg|png|gif|pdf|doc|docx|xls|xlsx|zip|rar)$/i,
     /\/(?:login|register|signup|signin|logout|privacy|terms|about|contact|support)$/i,
@@ -551,12 +551,12 @@ function isNonContentLink(url, linkText) {
 }
 
 // Helper function to escape regex special characters
-function escapeRegExp(string) {
+function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // Prioritize e-commerce links
-function prioritizeEcommerceLinks(links, baseUrl) {
+function prioritizeEcommerceLinks (links, _baseUrl) {
   return links.map(link => {
     let priority = 'normal';
     let score = 0;

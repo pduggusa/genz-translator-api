@@ -6,7 +6,7 @@
  * For production, replace with PostgreSQL, MongoDB, or similar
  */
 class CannabisTracker {
-  constructor() {
+  constructor () {
     // In-memory storage
     this.strains = new Map(); // strain_id -> strain data
     this.products = new Map(); // product_id -> product data
@@ -23,7 +23,7 @@ class CannabisTracker {
   /**
      * Save or update cannabis product data
      */
-  saveProduct(cannabisData) {
+  saveProduct (cannabisData) {
     const timestamp = new Date().toISOString();
     const strainId = this.generateStrainId(cannabisData.strain.name, cannabisData.dispensary.name);
     const productId = this.generateProductId(strainId, cannabisData.product.form, timestamp);
@@ -58,7 +58,7 @@ class CannabisTracker {
   /**
      * Generate unique strain ID
      */
-  generateStrainId(strainName, dispensaryName) {
+  generateStrainId (strainName, dispensaryName) {
     const normalized = `${strainName}_${dispensaryName}`.toLowerCase()
       .replace(/[^a-z0-9]/g, '_')
       .replace(/_+/g, '_');
@@ -68,7 +68,7 @@ class CannabisTracker {
   /**
      * Generate unique product ID
      */
-  generateProductId(strainId, form, timestamp) {
+  generateProductId (strainId, form, timestamp) {
     const date = new Date(timestamp).toISOString().split('T')[0];
     return `${strainId}_${form}_${date}`.replace(/[^a-z0-9_]/g, '_');
   }
@@ -76,7 +76,7 @@ class CannabisTracker {
   /**
      * Update or create strain master record
      */
-  updateStrainRecord(strainId, cannabisData) {
+  updateStrainRecord (strainId, cannabisData) {
     const existing = this.strains.get(strainId);
 
     if (existing) {
@@ -122,7 +122,7 @@ class CannabisTracker {
   /**
      * Update price history
      */
-  updatePriceHistory(strainId, pricing, timestamp) {
+  updatePriceHistory (strainId, pricing, timestamp) {
     if (!this.priceHistory.has(strainId)) {
       this.priceHistory.set(strainId, []);
     }
@@ -150,7 +150,7 @@ class CannabisTracker {
   /**
      * Update availability history
      */
-  updateAvailabilityHistory(strainId, availability, timestamp) {
+  updateAvailabilityHistory (strainId, availability, timestamp) {
     if (!this.availabilityHistory.has(strainId)) {
       this.availabilityHistory.set(strainId, []);
     }
@@ -177,7 +177,7 @@ class CannabisTracker {
   /**
      * Update search indexes
      */
-  updateIndexes(strainId, cannabisData) {
+  updateIndexes (strainId, cannabisData) {
     // Index by strain type
     const type = cannabisData.strain.type;
     if (type) {
@@ -208,7 +208,7 @@ class CannabisTracker {
   /**
      * Generate dispensary ID
      */
-  generateDispensaryId(dispensary) {
+  generateDispensaryId (dispensary) {
     return `${dispensary.name}_${dispensary.location.state}_${dispensary.location.city}`
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '_')
@@ -218,7 +218,7 @@ class CannabisTracker {
   /**
      * Get THC potency range for indexing
      */
-  getPotencyRange(thc) {
+  getPotencyRange (thc) {
     if (thc < 15) return 'low';
     if (thc < 25) return 'medium';
     return 'high';
@@ -229,28 +229,28 @@ class CannabisTracker {
      */
 
   // Get strain by ID
-  getStrain(strainId) {
+  getStrain (strainId) {
     return this.strains.get(strainId);
   }
 
   // Get all strains by type
-  getStrainsByType(type) {
+  getStrainsByType (type) {
     const strainIds = this.strainsByType.get(type) || new Set();
     return Array.from(strainIds).map(id => this.strains.get(id));
   }
 
   // Get price history for a strain
-  getPriceHistory(strainId) {
+  getPriceHistory (strainId) {
     return this.priceHistory.get(strainId) || [];
   }
 
   // Get availability history for a strain
-  getAvailabilityHistory(strainId) {
+  getAvailabilityHistory (strainId) {
     return this.availabilityHistory.get(strainId) || [];
   }
 
   // Get price trends (last 30 days)
-  getPriceTrends(strainId, days = 30) {
+  getPriceTrends (strainId, days = 30) {
     const history = this.getPriceHistory(strainId);
     const cutoffDate = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
 
@@ -277,7 +277,7 @@ class CannabisTracker {
   }
 
   // Get all tracked strains with basic info
-  getAllStrains() {
+  getAllStrains () {
     return Array.from(this.strains.values()).map(strain => ({
       id: strain.id,
       name: strain.name,
@@ -290,7 +290,7 @@ class CannabisTracker {
   }
 
   // Get analytics summary
-  getAnalyticsSummary() {
+  getAnalyticsSummary () {
     const totalStrains = this.strains.size;
     const totalProducts = this.products.size;
 
@@ -320,7 +320,7 @@ class CannabisTracker {
   /**
      * Get earliest tracking date
      */
-  getEarliestDate() {
+  getEarliestDate () {
     let earliest = null;
     for (const strain of this.strains.values()) {
       if (!earliest || strain.first_seen < earliest) {
@@ -333,7 +333,7 @@ class CannabisTracker {
   /**
      * Export data for backup/analysis
      */
-  exportData() {
+  exportData () {
     return {
       strains: Object.fromEntries(this.strains),
       products: Object.fromEntries(this.products),
@@ -346,7 +346,7 @@ class CannabisTracker {
   /**
      * Search strains by criteria
      */
-  searchStrains(criteria) {
+  searchStrains (criteria) {
     let results = Array.from(this.strains.values());
 
     // Filter by name

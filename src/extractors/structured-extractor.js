@@ -27,7 +27,7 @@ turndownService.addRule('lineBreaks', {
 });
 
 // Enhanced content extraction with structured output
-function extractStructuredContent(html, url) {
+function extractStructuredContent (html, url) {
   try {
     const $ = cheerio.load(html);
 
@@ -87,7 +87,7 @@ function extractStructuredContent(html, url) {
 }
 
 // Detect what type of content we're dealing with
-function detectContentType(html, $) {
+function detectContentType (html, $) {
   // E-commerce product indicators (prioritized)
   const productIndicators = [
     // Structured data
@@ -136,7 +136,7 @@ function detectContentType(html, $) {
 }
 
 // Extract product data with structured output
-function extractProductData(html, $, url) {
+function extractProductData (html, $, url) {
   const product = {
     type: 'product',
     title: '',
@@ -225,7 +225,7 @@ function extractProductData(html, $, url) {
 }
 
 // Extract pricing information
-function extractProductPricing($, html) {
+function extractProductPricing ($, html) {
   const pricing = {
     currentPrice: null,
     originalPrice: null,
@@ -312,7 +312,7 @@ function extractProductPricing($, html) {
 }
 
 // Extract product title with e-commerce priority
-function extractProductTitle($, html) {
+function extractProductTitle ($, html) {
   const titleSelectors = [
     'h1[class*="product"]',
     'h1[class*="item"]',
@@ -344,7 +344,7 @@ function extractProductTitle($, html) {
 }
 
 // Extract structured headers from product page
-function extractProductHeaders($) {
+function extractProductHeaders ($) {
   const headers = [];
 
   $('h1, h2, h3, h4, h5, h6').each((i, el) => {
@@ -366,7 +366,7 @@ function extractProductHeaders($) {
 }
 
 // Extract product content (description, features, specs)
-function extractProductContent($) {
+function extractProductContent ($) {
   const content = {
     description: '',
     specifications: {},
@@ -425,7 +425,7 @@ function extractProductContent($) {
 }
 
 // Extract product images
-function extractProductImages($, baseUrl) {
+function extractProductImages ($, baseUrl) {
   const images = [];
   const imageSelectors = [
     '[class*="product-image"] img',
@@ -467,7 +467,7 @@ function extractProductImages($, baseUrl) {
 }
 
 // Extract product variants (sizes, colors, etc.)
-function extractProductVariants($) {
+function extractProductVariants ($) {
   const variants = [];
 
   // Look for size selectors
@@ -530,7 +530,7 @@ function extractProductVariants($) {
 }
 
 // Extract review data
-function extractProductReviews($) {
+function extractProductReviews ($) {
   const reviews = {
     rating: null,
     count: null,
@@ -581,7 +581,7 @@ function extractProductReviews($) {
 }
 
 // Extract structured data (JSON-LD)
-function extractStructuredData(html) {
+function extractStructuredData (html) {
   const structuredData = {};
 
   // Extract JSON-LD
@@ -608,19 +608,19 @@ function extractStructuredData(html) {
 }
 
 // Helper functions
-function extractPrice(text) {
+function extractPrice (text) {
   if (!text) return null;
   const priceMatch = text.toString().match(/[\d,]+\.?\d*/);
   return priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
 }
 
-function extractCurrency(text) {
+function extractCurrency (text) {
   if (!text) return '';
   const currencyMatch = text.match(/[$€£¥₹]|USD|EUR|GBP|JPY|INR/);
   return currencyMatch ? currencyMatch[0] : '';
 }
 
-function extractBrand($, structuredData) {
+function extractBrand ($, structuredData) {
   if (structuredData.product?.brand?.name) {
     return structuredData.product.brand.name;
   }
@@ -639,7 +639,7 @@ function extractBrand($, structuredData) {
   return null;
 }
 
-function extractSKU($, structuredData) {
+function extractSKU ($, structuredData) {
   if (structuredData.product?.sku) {
     return structuredData.product.sku;
   }
@@ -658,7 +658,7 @@ function extractSKU($, structuredData) {
   return null;
 }
 
-function extractGTIN($, structuredData) {
+function extractGTIN ($, structuredData) {
   if (structuredData.product?.gtin) {
     return structuredData.product.gtin;
   }
@@ -679,7 +679,7 @@ function extractGTIN($, structuredData) {
   return null;
 }
 
-function extractCategory($, structuredData) {
+function extractCategory ($, structuredData) {
   if (structuredData.product?.category) {
     return structuredData.product.category;
   }
@@ -705,7 +705,7 @@ function extractCategory($, structuredData) {
   return categories.length > 0 ? categories : null;
 }
 
-function extractProductTags($) {
+function extractProductTags ($) {
   const tags = [];
 
   $('[class*="tag"], [class*="label"], .badge').each((i, el) => {
@@ -718,7 +718,7 @@ function extractProductTags($) {
   return tags;
 }
 
-function cleanHtmlToText(html) {
+function cleanHtmlToText (html) {
   if (!html) return '';
 
   return html
@@ -732,7 +732,7 @@ function cleanHtmlToText(html) {
 }
 
 // Article extraction (for non-product pages)
-function extractArticleData(html, $, url) {
+function extractArticleData (html, $, url) {
   // Use Readability for articles
   try {
     const doc = new JSDOM(html, { url });
@@ -765,7 +765,7 @@ function extractArticleData(html, $, url) {
   return extractGenericData(html, $, url);
 }
 
-function extractArticleHeaders(htmlContent) {
+function extractArticleHeaders (htmlContent) {
   const $ = cheerio.load(htmlContent);
   const headers = [];
 
@@ -786,7 +786,7 @@ function extractArticleHeaders(htmlContent) {
   return headers;
 }
 
-function extractPublishedTime($, html) {
+function extractPublishedTime ($, html) {
   // Try various selectors for publication time
   const timeSelectors = [
     'time[datetime]',
@@ -809,7 +809,7 @@ function extractPublishedTime($, html) {
 }
 
 // Generic data extraction
-function extractGenericData(html, $, url) {
+function extractGenericData (html, $, url) {
   return {
     type: 'generic',
     title: $('title').text() || $('h1').first().text() || '',
@@ -824,7 +824,7 @@ function extractGenericData(html, $, url) {
   };
 }
 
-function extractGenericHeaders($) {
+function extractGenericHeaders ($) {
   const headers = [];
 
   $('h1, h2, h3, h4, h5, h6').each((i, el) => {
@@ -843,7 +843,7 @@ function extractGenericHeaders($) {
   return headers;
 }
 
-function extractGenericContent($) {
+function extractGenericContent ($) {
   // Remove unwanted elements
   $('script, style, nav, header, footer, aside').remove();
 
@@ -869,7 +869,7 @@ function extractGenericContent($) {
 }
 
 // Listing data extraction
-function extractListingData(html, $, url) {
+function extractListingData (html, $, url) {
   return {
     type: 'listing',
     title: $('title').text() || $('h1').first().text() || '',

@@ -13,7 +13,7 @@ const azureConfig = {
   }
 };
 
-function isAzureEnvironment() {
+function isAzureEnvironment () {
   return !!(process.env.WEBSITE_SITE_NAME || process.env.APPSETTING_WEBSITE_SITE_NAME);
 }
 

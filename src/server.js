@@ -603,7 +603,7 @@ app.post('/api/fetch-url', handleFetchUrl);
 // Extract endpoint (alias for frontend compatibility)
 app.post('/extract', handleExtract);
 
-async function handleFetchUrl(req, res) {
+async function handleFetchUrl (req, res) {
   const startTime = Date.now();
 
   // Track request stats
@@ -928,7 +928,7 @@ app.get('/api/product', async (req, res) => {
 });
 
 // Enhanced extract endpoint for frontend compatibility
-async function handleExtract(req, res) {
+async function handleExtract (req, res) {
   const startTime = Date.now();
 
   try {
@@ -936,9 +936,9 @@ async function handleExtract(req, res) {
     const {
       url,
       enableBrowserEmulation = true,
-      followLinks = false,
-      maxDepth = 1,
-      maxLinksPerPage = 5
+      followLinks = false
+      // maxDepth = 1, // Reserved for future multi-level crawling
+      // maxLinksPerPage = 5 // Reserved for future pagination
     } = req.body;
 
     if (!url) {
