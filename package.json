@@ -1,36 +1,83 @@
 {
   "name": "genz-translator-api",
   "version": "3.0.0",
-  "description": "Advanced content extraction API with browser emulation and popup handling",
+  "description": "Advanced content extraction API with browser emulation, popup handling, and structured data output for price tracking and inventory monitoring",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest --passWithNoTests",
-    "azure:start": "node src/server.js"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix",
+    "azure:build": "npm ci --production",
+    "azure:start": "node src/server.js",
+    "audit:fix": "npm audit fix --force",
+    "clean": "rm -rf node_modules package-lock.json",
+    "reinstall": "npm run clean && npm install",
+    "postinstall": "npx playwright install firefox --with-deps"
   },
-  "author": "pduggusa <patrick@dugganusa.com>",
+  "keywords": [
+    "web-scraping",
+    "content-extraction",
+    "browser-automation",
+    "popup-handling",
+    "price-tracking",
+    "inventory-monitoring",
+    "ecommerce-scraping",
+    "playwright",
+    "structured-data",
+    "api",
+    "nodejs",
+    "express"
+  ],
+  "author": "PDuggusa <patrick@dugganusa.com>",
   "license": "MIT",
+  "homepage": "https://github.com/pduggusa/genz-translator-api#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pduggusa/genz-translator-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pduggusa/genz-translator-api/issues"
+  },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
-    "puppeteer": "^21.5.2",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "puppeteer-extra-plugin-adblocker": "^2.13.6",
-    "@mozilla/readability": "^0.4.4",
-    "jsdom": "^23.0.1",
-    "cheerio": "^1.0.0-rc.12",
-    "turndown": "^7.1.2",
+    "express-rate-limit": "^7.4.1",
+    "playwright": "^1.40.0",
+    "axios": "^1.6.0",
+    "@mozilla/readability": "^0.6.0",
+    "jsdom": "^25.0.1",
+    "cheerio": "^1.0.0",
+    "turndown": "^7.2.0",
     "compression": "^1.7.4"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "jest": "^29.7.0"
-  }
+    "nodemon": "^3.1.7",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "eslint": "^8.57.1",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.6.0"
+  },
+  "peerDependencies": {
+    "eslint": "^8.57.1"
+  },
+  "overrides": {
+    "eslint": "^8.57.1"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "type": "commonjs"
 }

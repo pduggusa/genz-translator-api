@@ -83,7 +83,7 @@
         }
         
         .result-container {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
@@ -134,6 +134,62 @@
             padding-bottom: 4px;
         }
 
+        .typeahead-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .typeahead-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .typeahead-item:hover, .typeahead-item.highlighted {
+            background-color: #f8fafc;
+        }
+
+        .typeahead-item:last-child {
+            border-bottom: none;
+        }
+
+        .url-suggestion {
+            font-family: 'Inter', monospace;
+            color: #6b7280;
+        }
+
+        .url-suggestion .domain {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .url-fix-notice {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -165,9 +221,17 @@
                         <input
                             type="url"
                             id="urlInput"
-                            placeholder="https://example.com"
+                            placeholder="Type a website URL... (e.g., bbc.com, reddit.com)"
                             class="w-full pl-14 pr-4 py-4 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-lg"
+                            autocomplete="off"
                         />
+                        <div id="typeaheadDropdown" class="typeahead-dropdown hidden"></div>
+                    </div>
+
+                    <!-- URL Fix Notice -->
+                    <div id="urlFixNotice" class="hidden url-fix-notice">
+                        <span>⚡</span>
+                        <span id="urlFixText"></span>
                     </div>
                     
                     <!-- Status Message -->
@@ -375,35 +439,43 @@
         }
 
         async function fetchUrlContent(url) {
-            const BACKEND_URL = 'https://genz-translator-api.azurewebsites.net/api/fetch-url';
-            
+            const BACKEND_URL = 'https://genz-translator-api.azurewebsites.net';
+
             try {
-                const response = await fetch(`${BACKEND_URL}?url=${encodeURIComponent(url)}`, {
-                    method: 'GET',
+                const response = await fetch(`${BACKEND_URL}/extract`, {
+                    method: 'POST',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        enableBrowserEmulation: true,
+                        followLinks: true,
+                        maxDepth: 2,
+                        maxLinksPerPage: 5
+                    })
                 });
-                
+
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => null);
                     throw new Error(errorData?.error || `HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
-                
+
                 if (!data.success) {
-                    throw new Error(data.error || 'Failed to fetch content');
+                    throw new Error(data.error || 'Failed to extract content');
                 }
-                
+
                 return {
-                    title: data.title || 'No title found',
-                    body: data.body,
-                    url: data.url,
-                    metadata: data.metadata
+                    title: data.data.title || 'No title found',
+                    body: data.data.content,
+                    url: data.data.url,
+                    metadata: data.data.metadata,
+                    linkedContent: data.data.linkedContent || []
                 };
-                
+
             } catch (error) {
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     throw new Error('Cannot connect to backend service. Please check your connection.');
@@ -414,18 +486,165 @@
                 } else if (error.message.includes('403') || error.message.includes('401')) {
                     throw new Error('Access denied. The website may block automated requests.');
                 }
-                
+
                 throw new Error(error.message);
             }
         }
 
-        function validateUrl(url) {
+        // Popular domains for typeahead suggestions
+        const popularDomains = [
+            { domain: 'bbc.com', name: 'BBC News', icon: '📰' },
+            { domain: 'cnn.com', name: 'CNN', icon: '📺' },
+            { domain: 'reddit.com', name: 'Reddit', icon: '🤖' },
+            { domain: 'twitter.com', name: 'Twitter', icon: '🐦' },
+            { domain: 'youtube.com', name: 'YouTube', icon: '📹' },
+            { domain: 'github.com', name: 'GitHub', icon: '💻' },
+            { domain: 'stackoverflow.com', name: 'Stack Overflow', icon: '🤓' },
+            { domain: 'medium.com', name: 'Medium', icon: '✍️' },
+            { domain: 'wikipedia.org', name: 'Wikipedia', icon: '📚' },
+            { domain: 'nytimes.com', name: 'New York Times', icon: '📰' },
+            { domain: 'washingtonpost.com', name: 'Washington Post', icon: '📰' },
+            { domain: 'theguardian.com', name: 'The Guardian', icon: '📰' },
+            { domain: 'techcrunch.com', name: 'TechCrunch', icon: '💼' },
+            { domain: 'verge.com', name: 'The Verge', icon: '🔮' },
+            { domain: 'wired.com', name: 'WIRED', icon: '⚡' },
+            { domain: 'arstechnica.com', name: 'Ars Technica', icon: '🔬' }
+        ];
+
+        let currentHighlightIndex = -1;
+        let typeaheadVisible = false;
+
+        function smartValidateUrl(input) {
+            let url = input.trim();
+            let corrected = false;
+            let originalUrl = url;
+
+            // If empty, return invalid
+            if (!url) return { valid: false, url, corrected: false };
+
+            // If it looks like a domain without protocol, add https://
+            if (!url.match(/^https?:\/\//i)) {
+                // Check if it looks like a domain (contains a dot and valid characters)
+                if (url.match(/^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/)) {
+                    url = 'https://' + url;
+                    corrected = true;
+                }
+            }
+
+            // Try to validate the URL
             try {
                 const urlObj = new URL(url);
-                return ['http:', 'https:'].includes(urlObj.protocol);
+                if (['http:', 'https:'].includes(urlObj.protocol)) {
+                    return {
+                        valid: true,
+                        url,
+                        corrected,
+                        originalUrl,
+                        fixedUrl: corrected ? url : null
+                    };
+                }
             } catch {
-                return false;
+                // If URL is still invalid, try some common fixes
+                if (!url.includes('.')) {
+                    // Try adding .com
+                    const withCom = 'https://' + originalUrl + '.com';
+                    try {
+                        new URL(withCom);
+                        return {
+                            valid: true,
+                            url: withCom,
+                            corrected: true,
+                            originalUrl,
+                            fixedUrl: withCom
+                        };
+                    } catch {}
+                }
             }
+
+            return { valid: false, url: originalUrl, corrected: false };
+        }
+
+        function showTypeahead(input) {
+            const dropdown = document.getElementById('typeaheadDropdown');
+            const query = input.toLowerCase();
+
+            if (!query) {
+                hideTypeahead();
+                return;
+            }
+
+            // Filter domains based on input
+            const matches = popularDomains.filter(item =>
+                item.domain.toLowerCase().includes(query) ||
+                item.name.toLowerCase().includes(query)
+            ).slice(0, 6);
+
+            if (matches.length === 0) {
+                hideTypeahead();
+                return;
+            }
+
+            // Generate dropdown HTML
+            const html = matches.map((item, index) => `
+                <div class="typeahead-item" data-index="${index}" data-url="https://${item.domain}">
+                    <span class="text-xl">${item.icon}</span>
+                    <div class="url-suggestion">
+                        <div class="domain">${item.domain}</div>
+                        <div class="text-sm text-gray-500">${item.name}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+            typeaheadVisible = true;
+            currentHighlightIndex = -1;
+
+            // Add click listeners
+            dropdown.querySelectorAll('.typeahead-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const url = item.dataset.url;
+                    document.getElementById('urlInput').value = url;
+                    hideTypeahead();
+                    hideUrlFixNotice();
+                });
+            });
+        }
+
+        function hideTypeahead() {
+            document.getElementById('typeaheadDropdown').classList.add('hidden');
+            typeaheadVisible = false;
+            currentHighlightIndex = -1;
+        }
+
+        function highlightTypeaheadItem(index) {
+            const items = document.querySelectorAll('.typeahead-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('highlighted', i === index);
+            });
+        }
+
+        function selectHighlightedItem() {
+            const highlightedItem = document.querySelector('.typeahead-item.highlighted');
+            if (highlightedItem) {
+                const url = highlightedItem.dataset.url;
+                document.getElementById('urlInput').value = url;
+                hideTypeahead();
+                hideUrlFixNotice();
+                return true;
+            }
+            return false;
+        }
+
+        function showUrlFixNotice(originalUrl, fixedUrl) {
+            const notice = document.getElementById('urlFixNotice');
+            const text = document.getElementById('urlFixText');
+            text.textContent = `Auto-corrected "${originalUrl}" to "${fixedUrl}"`;
+            notice.classList.remove('hidden');
+        }
+
+        function hideUrlFixNotice() {
+            document.getElementById('urlFixNotice').classList.add('hidden');
         }
 
         function showStatus(message, type = 'loading') {
@@ -482,18 +701,23 @@
 
         async function handleTranslate() {
             const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value.trim();
-            
-            // Validate URL
-            if (!url) {
-                showStatus('Please enter a URL', 'error');
+            const inputUrl = urlInput.value.trim();
+
+            // Smart validate URL
+            const validation = smartValidateUrl(inputUrl);
+
+            if (!validation.valid) {
+                showStatus('Please enter a valid URL (e.g., bbc.com, reddit.com)', 'error');
                 return;
             }
-            
-            if (!validateUrl(url)) {
-                showStatus('Please enter a valid URL (e.g., https://example.com)', 'error');
-                return;
+
+            // Show auto-correction notice if URL was fixed
+            if (validation.corrected) {
+                showUrlFixNotice(validation.originalUrl, validation.url);
+                urlInput.value = validation.url; // Update input with corrected URL
             }
+
+            const url = validation.url;
 
             setLoading(true);
             hideResults();
@@ -506,13 +730,22 @@
                 document.getElementById('loadingText').textContent = 'Translating content...';
                 showStatus('Translating to Gen Z...', 'loading');
                 
-                // Combine title and body
-                const fullContent = `${urlContent.title}\n\n${urlContent.body}`;
+                // Combine title, body, and linked content
+                let fullContent = `${urlContent.title}\n\n${urlContent.body}`;
+
+                // Add linked content if available
+                if (urlContent.linkedContent && urlContent.linkedContent.length > 0) {
+                    fullContent += '\n\n=== Related Content ===\n\n';
+                    urlContent.linkedContent.forEach((link, index) => {
+                        fullContent += `${index + 1}. ${link.title}\n${link.content}\n\n`;
+                    });
+                }
+
                 const translated = translateToGenZ(fullContent);
-                
-                // Display results with formatting
-                displayFormattedContent('originalContent', fullContent, urlContent.metadata?.isNewsArticle);
-                displayFormattedContent('translatedContent', translated, urlContent.metadata?.isNewsArticle);
+
+                // Display results with rich formatting
+                displayRichContent('originalContent', fullContent, urlContent);
+                displayRichContent('translatedContent', translated, urlContent);
                 
                 showStatus('Translation complete! 🔥', 'success');
                 showResults();
@@ -530,30 +763,56 @@
             }
         }
 
-        function displayFormattedContent(elementId, content, isNewsArticle = false) {
+        function displayRichContent(elementId, content, urlContent) {
             const element = document.getElementById(elementId);
-            
-            // Convert formatted text to HTML for display
+
+            // Enhanced content formatting with rich display
             let htmlContent = content
-                // Convert headings
-                .replace(/\n(=+ .+)\n/g, (match, heading) => {
-                    const level = heading.match(/^=+/)[0].length;
-                    const text = heading.replace(/^=+ /, '');
-                    return `<h${Math.min(level, 6)} class="font-bold text-lg mt-4 mb-2 text-gray-800">${text}</h${Math.min(level, 6)}>`;
-                })
-                // Convert paragraphs
-                .replace(/\n\n([^•=\n][^\n]*(?:\n[^•=\n][^\n]*)*)/g, '<p class="mb-3 leading-relaxed">$1</p>')
+                // Convert section headers (=== Text ===)
+                .replace(/\n=== (.+) ===\n/g, '<div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-3 rounded-lg mt-6 mb-4 font-semibold text-center">🔗 $1</div>')
+                // Convert numbered headings (= Text =)
+                .replace(/\n= (.+) =\n/g, '<h2 class="text-xl font-bold text-gray-800 mt-6 mb-3 border-b-2 border-purple-200 pb-2">📄 $1</h2>')
+                // Convert regular headings
+                .replace(/\n([A-Z][^\n]*:)\n/g, '<h3 class="text-lg font-semibold text-gray-700 mt-4 mb-2">$1</h3>')
+                // Convert numbered lists (1. 2. 3.)
+                .replace(/\n(\d+)\. (.+)/g, '<div class="flex items-start mb-2"><span class="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-3 mt-0.5">$1</span><span class="leading-relaxed">$2</span></div>')
                 // Convert bullet points
-                .replace(/\n• (.+)/g, '<li class="ml-4 mb-1">$1</li>')
-                // Wrap consecutive list items
-                .replace(/(<li[^>]*>.*<\/li>)(?:\s*<li[^>]*>.*<\/li>)*/gs, '<ul class="list-disc ml-6 mb-3">        function copyToClipboard(elementId) {</ul>')
+                .replace(/\n• (.+)/g, '<li class="ml-4 mb-2 leading-relaxed">$1</li>')
+                // Convert paragraphs
+                .replace(/\n\n([^<•\d\n=][^\n]*(?:\n[^<•\d\n=][^\n]*)*)/g, '<p class="mb-4 leading-relaxed text-gray-700">$1</p>')
                 // Convert line breaks
                 .replace(/\n/g, '<br>');
-            
-            element.innerHTML = htmlContent;
-            
+
+            // Wrap consecutive list items in proper ul tags
+            htmlContent = htmlContent.replace(/(<li[^>]*>.*?<\/li>(?:\s*<li[^>]*>.*?<\/li>)*)/gs, '<ul class="list-disc ml-6 mb-4 space-y-1">$1</ul>');
+
+            // Add metadata banner if available
+            let metadataHtml = '';
+            if (urlContent.metadata) {
+                const metadata = urlContent.metadata;
+                metadataHtml = `
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">🌐</span>
+                            <span class="font-semibold text-blue-800">Source Information</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-700">
+                            ${metadata.siteName ? `<div><strong>Site:</strong> ${metadata.siteName}</div>` : ''}
+                            ${metadata.author ? `<div><strong>Author:</strong> ${metadata.author}</div>` : ''}
+                            ${metadata.publishDate ? `<div><strong>Published:</strong> ${new Date(metadata.publishDate).toLocaleDateString()}</div>` : ''}
+                            ${metadata.wordCount ? `<div><strong>Word Count:</strong> ${metadata.wordCount.toLocaleString()}</div>` : ''}
+                        </div>
+                        ${urlContent.linkedContent && urlContent.linkedContent.length > 0 ?
+                            `<div class="mt-2 text-sm text-blue-600">📎 Includes ${urlContent.linkedContent.length} related link${urlContent.linkedContent.length > 1 ? 's' : ''}</div>` : ''
+                        }
+                    </div>
+                `;
+            }
+
+            element.innerHTML = metadataHtml + htmlContent;
+
             // Add special styling for news articles
-            if (isNewsArticle) {
+            if (urlContent.metadata?.isNewsArticle) {
                 element.classList.add('news-article-content');
             }
         }
@@ -569,11 +828,72 @@
             });
         }
 
-        // Enter key support
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+        // Enhanced input event listeners
+        const urlInput = document.getElementById('urlInput');
+
+        // Input event for typeahead
+        urlInput.addEventListener('input', function(e) {
+            const value = e.target.value;
+            showTypeahead(value);
+            hideUrlFixNotice(); // Hide any previous fix notices when typing
+        });
+
+        // Keyboard navigation for typeahead
+        urlInput.addEventListener('keydown', function(e) {
+            if (typeaheadVisible) {
+                const items = document.querySelectorAll('.typeahead-item');
+                const maxIndex = items.length - 1;
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentHighlightIndex = Math.min(currentHighlightIndex + 1, maxIndex);
+                        highlightTypeaheadItem(currentHighlightIndex);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentHighlightIndex = Math.max(currentHighlightIndex - 1, -1);
+                        highlightTypeaheadItem(currentHighlightIndex);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (selectHighlightedItem()) {
+                            return; // URL was selected from typeahead
+                        }
+                        // Fall through to normal enter handling
+                        handleTranslate();
+                        break;
+                    case 'Escape':
+                        hideTypeahead();
+                        break;
+                    case 'Tab':
+                        if (currentHighlightIndex >= 0) {
+                            e.preventDefault();
+                            selectHighlightedItem();
+                        } else {
+                            hideTypeahead();
+                        }
+                        break;
+                }
+            } else if (e.key === 'Enter') {
                 handleTranslate();
             }
+        });
+
+        // Hide typeahead when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                hideTypeahead();
+            }
+        });
+
+        // Blur event to hide typeahead after a short delay
+        urlInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!document.querySelector('.typeahead-item:hover')) {
+                    hideTypeahead();
+                }
+            }, 150);
         });
 
         // Auto-hide error messages after 5 seconds

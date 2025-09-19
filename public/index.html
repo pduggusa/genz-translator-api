@@ -3,150 +3,772 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen Z Translator API</title>
+    <title>Gen Z Translator API - Content Extraction</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 40px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { color: #333; border-bottom: 2px solid #007cba; padding-bottom: 10px; }
-        .api-form { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        input[type="url"] { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #007cba; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #005a87; }
-        .results { background: white; border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 4px; }
-        .loading { color: #666; font-style: italic; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 20px; line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content { padding: 30px; }
+
+        .health-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .health-healthy { background: #d4edda; border-left: 4px solid #28a745; }
+        .health-degraded { background: #fff3cd; border-left: 4px solid #ffc107; }
+        .health-error { background: #f8d7da; border-left: 4px solid #dc3545; }
+
+        .health-details {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-left: 25px;
+        }
+
+        .api-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #667eea;
+        }
+
+        .results {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .results-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .results-content {
+            padding: 20px;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        .view-btn {
+            padding: 6px 12px;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
         .success { color: #28a745; }
         .error { color: #dc3545; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
-        .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; }
-        .feature-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007cba; }
+        .warning { color: #ffc107; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .json-view {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .pricing-info {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        .error-info {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .links-section {
+            margin-top: 20px;
+        }
+        .link-item {
+            padding: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            margin: 5px 0;
+            transition: background-color 0.2s;
+        }
+        .link-item:hover {
+            background: #f8f9fa;
+        }
+        .link-url {
+            font-weight: 500;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .link-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container { margin: 10px; border-radius: 8px; }
+            .content { padding: 20px; }
+            .checkbox-group { flex-direction: column; gap: 10px; }
+            .view-toggle { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Gen Z Translator API</h1>
-        <p>Advanced content extraction with browser emulation, popup handling, and structured data output for price tracking and competitive intelligence.</p>
-        
-        <div class="feature-list">
-            <div class="feature-card">
-                <h3>🤖 Browser Emulation</h3>
-                <p>Full Chromium automation with popup handling for age verification, cookie consent, and newsletter dismissal.</p>
-            </div>
-            <div class="feature-card">
-                <h3>🏪 E-commerce Ready</h3>
-                <p>Extract product data with pricing, availability, variants, and reviews for price tracking applications.</p>
-            </div>
-            <div class="feature-card">
-                <h3>📊 Structured Output</h3>
-                <p>Clean JSON with semantic content tagging, perfect for automation and data analysis.</p>
-            </div>
-            <div class="feature-card">
-                <h3>🔗 Smart Deep Linking</h3>
-                <p>Intelligent link following with e-commerce prioritization for comprehensive data collection.</p>
-            </div>
+        <div class="header">
+            <h1>🚀 Gen Z Translator API</h1>
+            <p>Advanced content extraction with browser emulation, popup handling, and structured data output</p>
         </div>
 
-        <div class="api-form">
-            <h3>🧪 Test Content Extraction</h3>
-            <input type="url" id="urlInput" placeholder="https://amazon.com/dp/PRODUCT_ID" value="https://example.com">
-            <br>
-            <label><input type="checkbox" id="browserMode" checked> 🤖 Use Browser Emulation (handles popups)</label>
-            <br>
-            <label><input type="checkbox" id="followLinks"> 🔗 Follow Links (one level deep)</label>
-            <br><br>
-            <button onclick="extractContent()">🚀 Extract Content</button>
-        </div>
-        
-        <div id="results" class="results" style="display: none;"></div>
-        
-        <h3>📖 API Documentation</h3>
-        <ul>
-            <li><a href="/api">📋 API Overview</a> - Service information and capabilities</li>
-            <li><a href="/api/examples">🎯 Usage Examples</a> - Real-world implementation examples</li>
-            <li><a href="/api/stats">📊 Statistics</a> - Usage metrics and performance data</li>
-            <li><a href="/health">💊 Health Check</a> - System status and diagnostics</li>
-        </ul>
+        <div class="content">
+            <!-- Health Status -->
+            <div id="healthStatus" class="health-status health-healthy">
+                <div>🔄 Checking system health...</div>
+            </div>
 
-        <h3>🔧 API Endpoints</h3>
-        <ul>
-            <li><code>GET/POST /api/fetch-url</code> - Universal content extraction</li>
-            <li><code>GET /api/product</code> - Specialized product page extraction</li>
-            <li><code>POST /api/track-products</code> - Batch product monitoring</li>
-            <li><code>GET /api/stats</code> - Usage statistics and metrics</li>
-            <li><code>GET /health</code> - Health check and system status</li>
-        </ul>
+            <!-- API Form -->
+            <div class="api-form">
+                <h3>🧪 Content Extraction</h3>
+
+                <div class="form-group">
+                    <label for="urlInput">Target URL</label>
+                    <input type="url" id="urlInput"
+                           placeholder="nypost.com, amazon.com/dp/PRODUCT_ID, or https://example.com"
+                           value="nypost.com"
+                           list="urlSuggestions">
+                    <datalist id="urlSuggestions">
+                        <option value="nypost.com">
+                        <option value="amazon.com">
+                        <option value="ebay.com">
+                        <option value="reddit.com">
+                        <option value="github.com">
+                        <option value="stackoverflow.com">
+                    </datalist>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="browserMode" checked>
+                        <label for="browserMode">🦊 Use Firefox Browser Emulation</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="followLinks">
+                        <label for="followLinks">🔗 Follow Links (one level deep)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="takeScreenshot">
+                        <label for="takeScreenshot">📸 Take Screenshot</label>
+                    </div>
+                </div>
+
+                <button onclick="extractContent()" id="extractBtn">
+                    🚀 Extract Content
+                </button>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div id="progressContainer" class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Initializing...</div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="results" style="display: none;">
+                <div class="results-header">
+                    <h3 id="resultsTitle">Extraction Results</h3>
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="switchView('summary')">📊 Summary</button>
+                        <button class="view-btn" onclick="switchView('table')">📋 Table</button>
+                        <button class="view-btn" onclick="switchView('json')">🔍 JSON</button>
+                    </div>
+                </div>
+                <div class="results-content" id="resultsContent"></div>
+            </div>
+
+            <!-- Quick Links -->
+            <div style="margin-top: 30px;">
+                <h3>📖 API Endpoints</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <a href="/health" style="text-decoration: none;">
+                            <div class="metric-value">💊</div>
+                            <div class="metric-label">Health Check</div>
+                        </a>
+                    </div>
+                    <div class="metric-card">
+                        <a href="/api" style="text-decoration: none;">
+                            <div class="metric-value">📋</div>
+                            <div class="metric-label">API Info</div>
+                        </a>
+                    </div>
+                    <div class="metric-card">
+                        <a href="/api/stats" style="text-decoration: none;">
+                            <div class="metric-value">📊</div>
+                            <div class="metric-label">Statistics</div>
+                        </a>
+                    </div>
+                    <div class="metric-card">
+                        <a href="/api/examples" style="text-decoration: none;">
+                            <div class="metric-value">🎯</div>
+                            <div class="metric-label">Examples</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        let currentData = null;
+        let currentView = 'summary';
+
+        // Check health on page load
+        window.addEventListener('load', checkHealth);
+
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const health = await response.json();
+
+                const statusDiv = document.getElementById('healthStatus');
+                statusDiv.className = `health-status health-${health.status}`;
+
+                const statusIcon = health.status === 'healthy' ? '✅' :
+                                  health.status === 'degraded' ? '⚠️' : '❌';
+
+                statusDiv.innerHTML = `
+                    <div>
+                        ${statusIcon} System Status: ${health.status.toUpperCase()}
+                        <div class="health-details">
+                            Browser: ${health.browserTest || health.features?.browserEmulation || 'Unknown'} |
+                            Memory: ${health.memory?.used}MB |
+                            Uptime: ${Math.floor(health.uptime / 60)}m
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                const statusDiv = document.getElementById('healthStatus');
+                statusDiv.className = 'health-status health-error';
+                statusDiv.innerHTML = `<div>❌ Cannot connect to API server</div>`;
+            }
+        }
+
+        function normalizeUrl(url) {
+            // Trim whitespace
+            url = url.trim();
+
+            // If no protocol, add https
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            // Fix common domain typos
+            url = url.replace('www.www.', 'www.');
+
+            return url;
+        }
+
         async function extractContent() {
-            const url = document.getElementById('urlInput').value;
+            let url = document.getElementById('urlInput').value;
             const browser = document.getElementById('browserMode').checked;
             const followLinks = document.getElementById('followLinks').checked;
-            const results = document.getElementById('results');
-            
+            const screenshot = document.getElementById('takeScreenshot').checked;
+
             if (!url) {
                 alert('Please enter a URL');
                 return;
             }
-            
-            results.style.display = 'block';
-            results.innerHTML = '<div class="loading">🔄 Extracting content... This may take a few seconds.</div>';
-            
+
+            // Normalize URL
+            url = normalizeUrl(url);
+            document.getElementById('urlInput').value = url; // Update display
+
+            // Immediate UI feedback
+            const btn = document.getElementById('extractBtn');
+            btn.disabled = true;
+            btn.textContent = '🚀 Starting...';
+            btn.style.background = '#6c757d';
+
+            // Show progress immediately
+            showProgress();
+            updateProgress(5, 'Validating URL...');
+
             try {
+                // Quick URL validation
+                try {
+                    new URL(url);
+                    updateProgress(15, `✅ URL validated: ${url}`);
+                } catch (e) {
+                    throw new Error(`Invalid URL: ${url}`);
+                }
+
+                await sleep(300);
+                updateProgress(25, browser ? 'Initializing Firefox browser...' : 'Preparing HTTP request...');
+                btn.textContent = browser ? '🦊 Loading browser...' : '📡 Fetching...';
+
+                await sleep(500);
+                updateProgress(40, 'Sending request...');
+
+                const startTime = Date.now();
                 const response = await fetch('/api/fetch-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url, 
-                        browser, 
+                    body: JSON.stringify({
+                        url,
+                        browser,
                         followLinks,
-                        structured: true 
+                        screenshot,
+                        structured: true
                     })
                 });
-                
+
+                const fetchTime = Date.now() - startTime;
+                updateProgress(70, `Request completed (${fetchTime}ms)`);
+
+                btn.textContent = '📊 Processing data...';
+                await sleep(200);
+
+                updateProgress(85, 'Parsing response...');
                 const data = await response.json();
-                
-                if (data.success) {
-                    results.innerHTML = `
-                        <h3 class="success">✅ Extraction Successful</h3>
-                        <p><strong>🏷️ Content Type:</strong> ${data.contentType || 'generic'}</p>
-                        <p><strong>📝 Title:</strong> ${data.data?.title || 'No title'}</p>
-                        <p><strong>⚙️ Method:</strong> ${data.extractionMethod || 'unknown'}</p>
-                        <p><strong>⏱️ Processing Time:</strong> ${data.processingTime || 0}ms</p>
-                        ${data.browserMetrics ? `<p><strong>🚫 Popups Handled:</strong> ${data.browserMetrics.popupsHandled}</p>` : ''}
-                        ${data.data?.pricing ? `
-                            <div style="background: #e8f5e8; padding: 15px; border-radius: 4px; margin: 10px 0;">
-                                <h4>💰 Product Pricing</h4>
-                                <p><strong>Price:</strong> ${data.data.pricing.currency}${data.data.pricing.currentPrice}</p>
-                                <p><strong>Availability:</strong> ${data.data.pricing.availability}</p>
-                                ${data.data.pricing.discount ? `<p><strong>Discount:</strong> ${data.data.pricing.discount.percentage}% OFF</p>` : ''}
-                            </div>
-                        ` : ''}
-                        ${data.linkedPages ? `<p><strong>🔗 Linked Pages:</strong> ${data.linkedPages.length} pages found</p>` : ''}
-                        <details>
-                            <summary>🔍 View Raw JSON Data</summary>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
-                        </details>
-                    `;
-                } else {
-                    results.innerHTML = `
-                        <h3 class="error">❌ Extraction Failed</h3>
-                        <p><strong>Error:</strong> ${data.error}</p>
-                        ${data.suggestion ? `<p><strong>💡 Suggestion:</strong> ${data.suggestion}</p>` : ''}
-                        <details>
-                            <summary>🔍 View Error Details</summary>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
-                        </details>
-                    `;
-                }
+
+                updateProgress(95, 'Formatting results...');
+                await sleep(200);
+
+                updateProgress(100, `✅ Complete! (${data.processingTime || fetchTime}ms total)`);
+                await sleep(400);
+
+                // Always show results - success or error
+                hideProgress();
+                displayResults(data);
+
             } catch (error) {
-                results.innerHTML = `
-                    <h3 class="error">❌ Request Failed</h3>
-                    <p><strong>Error:</strong> ${error.message}</p>
-                    <p><strong>💡 Suggestion:</strong> Make sure the server is running and try again.</p>
-                `;
+                // Always show error results
+                updateProgress(100, `❌ Error: ${error.message}`);
+                await sleep(500);
+
+                hideProgress();
+                displayResults({
+                    success: false,
+                    error: error.message,
+                    url: url,
+                    timestamp: new Date().toISOString(),
+                    suggestion: 'Check the URL and try again, or try without browser emulation'
+                });
+            } finally {
+                // Reset button
+                btn.disabled = false;
+                btn.textContent = '🚀 Extract Content';
+                btn.style.background = ''; // Reset to CSS default
             }
         }
-        
+
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+
+        function displayResults(data) {
+            currentData = data;
+
+            // Always show results section
+            document.getElementById('results').style.display = 'block';
+
+            if (data.success) {
+                document.getElementById('resultsTitle').innerHTML = '✅ Extraction Successful';
+
+                // Check if it was a fallback
+                if (data.fallback) {
+                    document.getElementById('resultsTitle').innerHTML = '⚠️ Extraction Successful (HTTP Fallback)';
+                }
+
+                switchView(currentView);
+            } else {
+                document.getElementById('resultsTitle').innerHTML = '❌ Extraction Failed';
+                displayErrorResults(data);
+            }
+        }
+
+        function displayErrorResults(data) {
+            const content = document.getElementById('resultsContent');
+
+            // Create a comprehensive error display
+            const errorTime = data.timestamp || new Date().toISOString();
+            const errorUrl = data.url || 'Unknown URL';
+
+            content.innerHTML = `
+                <div class="error-info">
+                    <h4>❌ Extraction Failed</h4>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" style="color: #dc3545;">Failed</div>
+                            <div class="metric-label">Status</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${data.processingTime || 0}ms</div>
+                            <div class="metric-label">Processing Time</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${data.extractionMethod || 'Unknown'}</div>
+                            <div class="metric-label">Method</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${errorTime.split('T')[1]?.split('.')[0] || 'Unknown'}</div>
+                            <div class="metric-label">Time</div>
+                        </div>
+                    </div>
+
+                    <h4>📄 Request Details</h4>
+                    <p><strong>URL:</strong> <a href="${errorUrl}" target="_blank">${errorUrl}</a></p>
+                    <p><strong>Error:</strong> ${data.error || data.message || 'Unknown error occurred'}</p>
+
+                    ${data.suggestion ? `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                            <h4>💡 Suggestions</h4>
+                            <p>${data.suggestion}</p>
+                            <ul>
+                                <li>Try disabling browser emulation (uncheck Firefox option)</li>
+                                <li>Check if the URL is accessible in your browser</li>
+                                <li>Some sites block automated requests</li>
+                                <li>Try a different URL to test the service</li>
+                            </ul>
+                        </div>
+                    ` : ''}
+
+                    ${data.browserError ? `
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #dc3545;">
+                            <h4>🦊 Browser Error</h4>
+                            <p>${data.browserError}</p>
+                            <p><em>The system will automatically retry with HTTP-only extraction.</em></p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <details style="margin-top: 20px;">
+                    <summary style="cursor: pointer; font-weight: 600; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        🔍 Raw Response Data (for debugging)
+                    </summary>
+                    <div class="json-view" style="margin-top: 10px;">${JSON.stringify(data, null, 2)}</div>
+                </details>
+            `;
+        }
+
+
+        function switchView(view) {
+            currentView = view;
+
+            // Update active button
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="switchView('${view}')"]`).classList.add('active');
+
+            if (!currentData || !currentData.success) return;
+
+            const content = document.getElementById('resultsContent');
+
+            switch(view) {
+                case 'summary':
+                    displaySummaryView(content);
+                    break;
+                case 'table':
+                    displayTableView(content);
+                    break;
+                case 'json':
+                    displayJsonView(content);
+                    break;
+            }
+        }
+
+        function displaySummaryView(content) {
+            const data = currentData;
+
+            // Metrics
+            let metricsHtml = `
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${data.processingTime || 0}ms</div>
+                        <div class="metric-label">Processing Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${data.contentType || 'Generic'}</div>
+                        <div class="metric-label">Content Type</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${data.extractionMethod || 'Unknown'}</div>
+                        <div class="metric-label">Method</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${data.browserMetrics?.popupsHandled || 0}</div>
+                        <div class="metric-label">Popups Handled</div>
+                    </div>
+                </div>
+            `;
+
+            // Content details
+            let detailsHtml = `
+                <h4>📄 Content Details</h4>
+                <p><strong>Title:</strong> ${data.data?.title || 'No title'}</p>
+                <p><strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
+                ${data.fallback ? '<p class="warning">⚠️ Used HTTP fallback (browser emulation failed)</p>' : ''}
+            `;
+
+            // Pricing info if available
+            let pricingHtml = '';
+            if (data.data?.pricing) {
+                pricingHtml = `
+                    <div class="pricing-info">
+                        <h4>💰 Product Pricing</h4>
+                        <p><strong>Price:</strong> ${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}</p>
+                        <p><strong>Availability:</strong> ${data.data.pricing.availability}</p>
+                        ${data.data.pricing.discount ? `<p><strong>Discount:</strong> ${data.data.pricing.discount.percentage}% OFF</p>` : ''}
+                    </div>
+                `;
+            }
+
+            // Links if available
+            let linksHtml = '';
+            if (data.linkedPages?.length > 0) {
+                linksHtml = `
+                    <div class="links-section">
+                        <h4>🔗 Found Links (${data.linkedPages.length})</h4>
+                        ${data.linkedPages.slice(0, 5).map(link => `
+                            <div class="link-item">
+                                <a href="${link.url}" target="_blank" class="link-url">${link.text || 'Untitled'}</a>
+                                <div class="link-text">${link.context || link.url}</div>
+                            </div>
+                        `).join('')}
+                        ${data.linkedPages.length > 5 ? `<p>... and ${data.linkedPages.length - 5} more links</p>` : ''}
+                    </div>
+                `;
+            }
+
+            content.innerHTML = metricsHtml + detailsHtml + pricingHtml + linksHtml;
+        }
+
+        function displayTableView(content) {
+            const data = currentData;
+
+            let tableRows = [
+                ['Property', 'Value'],
+                ['Status', data.success ? '✅ Success' : '❌ Failed'],
+                ['Processing Time', `${data.processingTime || 0}ms`],
+                ['Content Type', data.contentType || 'Generic'],
+                ['Extraction Method', data.extractionMethod || 'Unknown'],
+                ['Title', data.data?.title || 'No title'],
+                ['URL', data.url],
+                ['Popups Handled', data.browserMetrics?.popupsHandled || 0],
+                ['Browser Fallback', data.fallback ? 'Yes' : 'No']
+            ];
+
+            if (data.data?.pricing) {
+                tableRows.push(
+                    ['Price', `${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}`],
+                    ['Availability', data.data.pricing.availability]
+                );
+            }
+
+            const tableHtml = `
+                <table class="data-table">
+                    ${tableRows.map((row, index) =>
+                        index === 0
+                            ? `<tr>${row.map(cell => `<th>${cell}</th>`).join('')}</tr>`
+                            : `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
+                    ).join('')}
+                </table>
+            `;
+
+            content.innerHTML = tableHtml;
+        }
+
+        function displayJsonView(content) {
+            content.innerHTML = `<div class="json-view">${JSON.stringify(currentData, null, 2)}</div>`;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         // Auto-focus on URL input
         document.getElementById('urlInput').focus();
     </script>
