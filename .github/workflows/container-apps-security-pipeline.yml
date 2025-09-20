@@ -141,7 +141,6 @@ jobs:
           secrets-scan.json
           sast-results.json
           npm-audit.json
-          snyk-results.json
           iac-scan.json
           licenses.json
 
