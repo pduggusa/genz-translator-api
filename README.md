@@ -1,51 +1,69 @@
 # 🔧 hacksaws2x4 v3.0.0
 
 [![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=for-the-badge)](.)
-[![Security Status](https://img.shields.io/badge/Security-Enterprise%20Grade-brightgreen?style=for-the-badge&logo=shield)](.)
+[![Production Deployment](https://github.com/pduggusa/genz-translator-api/actions/workflows/production-deploy.yml/badge.svg)](https://github.com/pduggusa/genz-translator-api/actions/workflows/production-deploy.yml)
+[![Release Management](https://github.com/pduggusa/genz-translator-api/actions/workflows/release.yml/badge.svg)](https://github.com/pduggusa/genz-translator-api/actions/workflows/release.yml)
+[![Security Status](https://img.shields.io/badge/Security-Multi--Layer%20Validation-brightgreen?style=for-the-badge&logo=shield)](.)
 [![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
-[![Build Status](https://img.shields.io/badge/Build-Simplified%20Pipeline-success?style=for-the-badge&logo=github)](.)
-[![Test Coverage](https://img.shields.io/badge/Coverage-90%25%20Security-success?style=for-the-badge&logo=jest)](.)
+[![ACR Optimized](https://img.shields.io/badge/ACR-AMD64%20Optimized-blue?style=for-the-badge&logo=docker)](.)
 [![Firefox Ready](https://img.shields.io/badge/Firefox-Browser%20Automation-ff7139?style=for-the-badge&logo=firefox)](.)
 
-Enterprise-grade content extraction API v3.0.0 with **simplified 3-stage deployment pipeline** and essential security scanning.
+Enterprise-grade content extraction API v3.0.0 with **intelligent ACR deployment** and comprehensive security validation.
 
-## 🛡️ Enterprise Security Implementation
+## 🚀 Smart CI/CD Pipeline
 
-This API implements a **5-stage security-first deployment pipeline** with zero-tolerance validation:
+### 🎯 **Intelligent Build Detection**
+- **Smart Triggering**: ACR builds only when application code changes
+- **Path-based Filtering**: Skips builds for docs, tests, or config-only changes
+- **Conditional Deployment**: Efficient resource usage with intelligent decision making
+- **Manual Override**: Always available via workflow dispatch
 
-### 🚨 Stage 1: Security Gate (Deployment Blocker)
-- **🔐 Secrets Detection** - TruffleHog, Checkov, custom patterns (0 tolerance)
-- **🔍 SAST Analysis** - Semgrep, ESLint security, NodeJSScan
-- **🔗 Dependency Security** - NPM audit, Snyk, Retire.js (0 critical vulnerabilities)
-- **📜 License Compliance** - Prohibited license detection (GPL/AGPL blocked)
-- **⛓️ Supply Chain Security** - Package signature verification (152+ packages)
+### 🛡️ **Multi-Layer Security Validation**
 
-### 🧪 Stage 2: Non-Blocking Quality Assessment
-- **Multi-Node.js Testing** - 18.x and 20.x validation (informational)
-- **Security Test Reporting** - Security tests provide insights (non-blocking)
-- **Content Detection Testing** - Specialized content validation (continues on failure)
-- **Performance Monitoring** - Response time and memory tracking (always reports)
-- **Philosophy** - Ship fast, measure everything, improve continuously
+#### 🔍 **Change Analysis & Build Decision**
+- **File Change Detection**: Analyzes what files changed in each commit
+- **Smart Triggers**: ACR builds only for `src/`, `package.json`, `Dockerfile*`, `azure/`, build scripts
+- **Skip Conditions**: Documentation, tests, linting configs automatically skipped
+- **Decision Reporting**: Clear visibility into why builds run or skip
 
-### 🐳 Stage 3: Secure Container Build
-- **Container Vulnerability Scanning** - Trivy image analysis
-- **Security Labels** - Comprehensive metadata tracking
-- **Non-root Execution** - Secure container user implementation
-- **Health Checks** - Built-in monitoring and validation
+#### 🐳 **Conditional ACR Container Build** (AMD64 Optimized)
+- **Multi-stage Dockerfile**: Pre-installed security tools (TruffleHog, Semgrep, Checkov)
+- **Platform Targeting**: `linux/amd64` specifically for Azure Container Apps
+- **Registry Caching**: Efficient builds with ACR cache layers
+- **Security Tools**: Integrated scanning tools for runtime security validation
 
-### 🚀 Stage 4: Secure Deployment
-- **Container Apps** - Azure Container Apps with auto-scaling
-- **Post-deployment Validation** - Health and functionality verification
-- **Security Header Validation** - HTTPS enforcement and security headers
-- **Content Extraction Testing** - Live functionality validation
+#### 🔐 **Security Validation** (Non-blocking but Comprehensive)
+- **🐷 TruffleHog**: Secret detection scanning
+- **🔍 Semgrep**: SAST analysis for code security
+- **✅ Checkov**: Infrastructure and container security
+- **📊 NPM Audit**: Dependency vulnerability scanning
+- **Philosophy**: Security insights inform but don't block deployment
 
-### 🚨 Stage 5: Failure Handling & Rollback
-- **Automatic Rollback** - Failed deployments auto-revert
-- **Incident Response** - Automated notifications and reporting
-- **Failure Analysis** - Detailed failure reporting and tracking
+#### 🚀 **Intelligent Deployment**
+- **New Image Deployment**: When ACR build succeeds, deploy fresh container
+- **Status Check Mode**: When no build needed, verify current deployment health
+- **Health Validation**: Automatic endpoint testing and functionality verification
+- **Rollback Ready**: Failed deployments maintain previous working state
 
-### 🏆 Pipeline Achievements
-**Enterprise-grade security with continuous deployment** - tests inform but never block delivery.
+### 🏆 **Pipeline Achievements**
+
+#### ✅ **Cost & Performance Optimized**
+- **Conditional Builds**: Save CI minutes and ACR costs by skipping unnecessary builds
+- **AMD64 Targeting**: Platform-specific builds for Azure Container Apps
+- **Cache Optimization**: Multi-layer caching for faster build times
+- **Smart Resource Usage**: Build only when application code actually changes
+
+#### 🔒 **Security Without Blocking**
+- **Comprehensive Scanning**: 4-tool security validation (TruffleHog, Semgrep, Checkov, NPM Audit)
+- **Non-blocking Philosophy**: Security insights inform development without blocking deployment
+- **Container Hardening**: Pre-installed security tools in production images
+- **Secret Protection**: GitHub push protection prevents credential leaks
+
+#### 🚀 **Production Ready**
+- **Azure Container Registry**: Enterprise-grade container storage
+- **Container Apps**: Serverless scaling with automatic health checks
+- **Intelligent Deployment**: Deploy new images or verify current status based on changes
+- **Live Validation**: Post-deployment health and functionality testing
 
 ### 🚀 Non-Blocking Testing Philosophy
 - **✅ Always Ship**: Tests provide insights, deployment always proceeds
