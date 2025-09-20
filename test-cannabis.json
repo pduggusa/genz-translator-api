@@ -1,0 +1,19 @@
+{
+  "url": "https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu/?refinementList[root_types][]=flower",
+  "type": "cannabis",
+  "includeSelectors": [
+    "[data-testid=\"product-card\"]",
+    ".product-card",
+    ".cannabis-product",
+    ".flower-product",
+    "[class*=\"product\"]"
+  ],
+  "customSelectors": {
+    "products": "[data-testid=\"product-card\"], .product-card, .cannabis-product",
+    "name": "h3, .product-name, [data-testid=\"product-name\"]",
+    "price": ".price, [data-testid=\"price\"], [class*=\"price\"]",
+    "strain": ".strain-type, [data-testid=\"strain\"], [class*=\"strain\"]"
+  },
+  "waitForSelectors": [".product-card"],
+  "timeout": 60000
+}
