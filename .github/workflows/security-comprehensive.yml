@@ -54,7 +54,8 @@ jobs:
         npm install -g audit-ci snyk retire @cyclonedx/cyclonedx-npm
 
         # Additional specialized tools
-        curl -L https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog_linux_amd64.tar.gz | tar -xz
+        curl -L -o trufflehog https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog_linux_amd64
+        chmod +x trufflehog
         sudo mv trufflehog /usr/local/bin/
 
         # Container security tools
