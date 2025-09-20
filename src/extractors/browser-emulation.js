@@ -169,7 +169,13 @@ async function handlePopupsAndOverlays (page) {
           'input[value*="yes"], input[value*="confirm"], input[value*="enter"]',
           'button:has-text("Yes, I am"), button:has-text("I am 21"), button:has-text("I am 18")',
           'button:has-text("Enter Site"), button:has-text("Continue"), button:has-text("Proceed")',
-          '[id*="age"] button, [class*="age"] button'
+          '[id*="age"] button, [class*="age"] button',
+          // Green Goods specific selectors
+          'button:has-text("Yes")', 'input[value="Yes"]',
+          'input[type="radio"][value="Yes"]', 'input[type="radio"][value="yes"]',
+          '.step-1-only button', '.gf_page button',
+          'form button[type="submit"]', 'form input[type="submit"]',
+          '.gform_button', '.button'
         ],
         type: 'age-verification',
         keywords: ['18', '21', 'yes', 'enter', 'confirm', 'proceed', 'continue']

@@ -277,6 +277,78 @@
             margin-top: 5px;
         }
 
+        .tab-content {
+            display: block;
+        }
+
+        .strain-card {
+            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
+            color: #2d5a3d;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .strain-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .strain-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         @media (max-width: 768px) {
             .container { margin: 10px; border-radius: 8px; }
             .content { padding: 20px; }
@@ -288,8 +360,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔧 hacksaws2x4</h1>
-            <p>Advanced content extraction with browser emulation, popup handling, and structured data output</p>
+            <h1>🪚 hacksaws2x4</h1>
+            <p>Gen Z Translator API - Advanced content extraction with cannabis specialty features</p>
         </div>
 
         <div class="content">
@@ -298,23 +370,31 @@
                 <div>🔄 Checking system health...</div>
             </div>
 
-            <!-- API Form -->
-            <div class="api-form">
-                <h3>🧪 Content Extraction</h3>
+            <!-- Navigation Tabs -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="view-btn active" onclick="showTab('extraction')" id="extractionTab">🧪 Content Extraction</button>
+                <button class="view-btn" onclick="showTab('cannabis')" id="cannabisTab">🌿 Cannabis Search</button>
+                <button class="view-btn" onclick="showTab('analytics')" id="analyticsTab">📊 Analytics</button>
+            </div>
+
+            <!-- Content Extraction Tab -->
+            <div id="extractionContent" class="tab-content">
+                <div class="api-form">
+                    <h3>🧪 Content Extraction</h3>
 
                 <div class="form-group">
                     <label for="urlInput">Target URL</label>
                     <input type="url" id="urlInput"
-                           placeholder="nypost.com, amazon.com/dp/PRODUCT_ID, or https://example.com"
-                           value="nypost.com"
+                           placeholder="leafly.com, weedmaps.com, or any website URL"
+                           value="leafly.com"
                            list="urlSuggestions">
                     <datalist id="urlSuggestions">
+                        <option value="leafly.com">
+                        <option value="weedmaps.com">
                         <option value="nypost.com">
                         <option value="amazon.com">
                         <option value="ebay.com">
                         <option value="reddit.com">
-                        <option value="github.com">
-                        <option value="stackoverflow.com">
                     </datalist>
                 </div>
 
@@ -333,9 +413,62 @@
                     </div>
                 </div>
 
-                <button onclick="extractContent()" id="extractBtn">
-                    🚀 Extract Content
-                </button>
+                    <button onclick="extractContent()" id="extractBtn">
+                        🚀 Extract Content
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cannabis Search Tab -->
+            <div id="cannabisContent" class="tab-content" style="display: none;">
+                <div class="api-form">
+                    <h3>🌿 Cannabis Strain Search</h3>
+                    <p>Search for cannabis strains with advanced filtering options</p>
+
+                    <div class="form-group">
+                        <label for="strainType">Strain Type</label>
+                        <select id="strainType">
+                            <option value="">All Types</option>
+                            <option value="indica">Indica</option>
+                            <option value="sativa">Sativa</option>
+                            <option value="hybrid">Hybrid</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="thcMin">Min THC %</label>
+                            <input type="number" id="thcMin" min="0" max="100" placeholder="e.g. 20">
+                        </div>
+                        <div class="form-group">
+                            <label for="thcMax">Max THC %</label>
+                            <input type="number" id="thcMax" min="0" max="100" placeholder="e.g. 30">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priceMax">Maximum Price ($)</label>
+                        <input type="number" id="priceMax" min="0" placeholder="e.g. 60">
+                    </div>
+
+                    <button onclick="searchStrains()" id="cannabisBtn">
+                        🔍 Search Strains
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsContent" class="tab-content" style="display: none;">
+                <div class="api-form">
+                    <h3>📊 Cannabis Analytics</h3>
+                    <p>View market trends and usage statistics</p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                        <button onclick="loadAnalytics()" class="view-btn">📈 Market Trends</button>
+                        <button onclick="loadStats()" class="view-btn">📊 Usage Stats</button>
+                        <button onclick="loadPriceTrends()" class="view-btn">💰 Price Trends</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Progress Indicator -->
@@ -864,6 +997,187 @@
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.view-btn').forEach(tab => {
+                if (tab.onclick && tab.onclick.toString().includes('showTab')) {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName + 'Content').style.display = 'block';
+
+            // Add active class to clicked tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // Cannabis strain search functionality
+        async function searchStrains() {
+            const strainType = document.getElementById('strainType').value;
+            const thcMin = document.getElementById('thcMin').value;
+            const thcMax = document.getElementById('thcMax').value;
+            const priceMax = document.getElementById('priceMax').value;
+
+            const btn = document.getElementById('cannabisBtn');
+            btn.disabled = true;
+            btn.textContent = '🔍 Searching...';
+
+            try {
+                const params = new URLSearchParams();
+                if (strainType) params.append('type', strainType);
+                if (thcMin) params.append('thc_min', thcMin);
+                if (thcMax) params.append('thc_max', thcMax);
+                if (priceMax) params.append('price_max', priceMax);
+
+                const response = await fetch(`/api/cannabis/strains?${params}`);
+                const data = await response.json();
+
+                displayCannabisResults(data);
+
+            } catch (error) {
+                displayCannabisResults({
+                    success: false,
+                    error: error.message
+                });
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Search Strains';
+            }
+        }
+
+        function displayCannabisResults(data) {
+            let resultsHtml = '';
+
+            if (data.success && data.strains && data.strains.length > 0) {
+                resultsHtml = `
+                    <div class="results" style="display: block;">
+                        <div class="results-header">
+                            <h3>🌿 Found ${data.strains.length} Strains</h3>
+                        </div>
+                        <div class="results-content">
+                            ${data.strains.map(strain => renderStrainCard(strain)).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (data.success) {
+                resultsHtml = `
+                    <div class="results" style="display: block;">
+                        <div class="results-content">
+                            <p>No strains found matching your criteria. Try adjusting your filters.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultsHtml = `
+                    <div class="results" style="display: block;">
+                        <div class="results-content">
+                            <div class="error-info">
+                                <h4>❌ Search Failed</h4>
+                                <p>${data.error || 'Unknown error occurred'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Remove existing results and add new ones
+            const existingResults = document.querySelector('#cannabisContent .results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            document.getElementById('cannabisContent').insertAdjacentHTML('beforeend', resultsHtml);
+        }
+
+        function renderStrainCard(strain) {
+            return `
+                <div class="strain-card">
+                    <div class="strain-name">${strain.strain?.name || 'Unknown Strain'}</div>
+                    <div class="strain-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Type</div>
+                            <div class="detail-value">${strain.strain?.type || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">THC</div>
+                            <div class="detail-value">${strain.potency?.thc?.percentage || 'N/A'}%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">CBD</div>
+                            <div class="detail-value">${strain.potency?.cbd?.percentage || 'N/A'}%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Price</div>
+                            <div class="detail-value">$${strain.pricing?.current_price || 'N/A'}</div>
+                        </div>
+                        ${strain.dispensary ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Dispensary</div>
+                            <div class="detail-value">${strain.dispensary.name}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Analytics functions
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/api/cannabis/analytics');
+                const data = await response.json();
+                displayAnalyticsResults('Market Analytics', data);
+            } catch (error) {
+                displayAnalyticsResults('Error', { error: error.message });
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                displayAnalyticsResults('Usage Statistics', data);
+            } catch (error) {
+                displayAnalyticsResults('Error', { error: error.message });
+            }
+        }
+
+        async function loadPriceTrends() {
+            try {
+                const response = await fetch('/api/cannabis/trends?days=30');
+                const data = await response.json();
+                displayAnalyticsResults('30-Day Price Trends', data);
+            } catch (error) {
+                displayAnalyticsResults('Error', { error: error.message });
+            }
+        }
+
+        function displayAnalyticsResults(title, data) {
+            const resultsHtml = `
+                <div class="results" style="display: block;">
+                    <div class="results-header">
+                        <h3>📊 ${title}</h3>
+                    </div>
+                    <div class="results-content">
+                        <div class="json-view">${JSON.stringify(data, null, 2)}</div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing results and add new ones
+            const existingResults = document.querySelector('#analyticsContent .results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            document.getElementById('analyticsContent').insertAdjacentHTML('beforeend', resultsHtml);
         }
 
         // Auto-focus on URL input

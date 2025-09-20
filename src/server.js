@@ -8,6 +8,10 @@ const path = require('path');
 const { fetchPageWithBrowser } = require('./extractors/browser-emulation');
 const { extractStructuredContent } = require('./extractors/structured-extractor');
 const { cannabisTracker } = require('./database/cannabis-tracker');
+const { PersistentCannabisTracker } = require('./database/persistent-tracker');
+
+// Initialize persistent tracker
+const persistentTracker = new PersistentCannabisTracker('./data');
 const { followLinksAndExtract, extractCannabisProducts } = require('./extractors/link-follower');
 
 const app = express();
@@ -1514,6 +1518,297 @@ app.get('/api/cannabis/export', (req, res) => {
   }
 });
 
+// Batch dispensary aggregation endpoint
+app.post('/api/cannabis/aggregate', async (req, res) => {
+  try {
+    const { dispensaries, options = {} } = req.body;
+
+    if (!dispensaries || !Array.isArray(dispensaries)) {
+      return res.status(400).json({
+        success: false,
+        error: 'dispensaries array required',
+        example: {
+          dispensaries: [
+            { name: 'RISE Cannabis', url: 'https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu/' },
+            { name: 'Green Goods', url: 'https://visitgreengoods.com/bloomington-mn-menu-med/menu/flower' },
+            { name: 'Leafly', url: 'https://leafly.com' }
+          ],
+          options: { timeout: 60000, followLinks: true }
+        }
+      });
+    }
+
+    const startTime = Date.now();
+    const results = [];
+    const errors = [];
+
+    console.log(`🌿 Starting batch aggregation for ${dispensaries.length} dispensaries...`);
+
+    // Process each dispensary
+    for (const dispensary of dispensaries) {
+      try {
+        console.log(`📊 Processing ${dispensary.name}: ${dispensary.url}`);
+
+        const extractionStart = Date.now();
+
+        // Use existing fetch-url logic but with timeout control
+        const result = await fetchPageWithBrowser(dispensary.url, {
+          timeout: options.timeout || 60000,
+          waitForSelector: options.waitForSelector,
+          screenshot: false
+        });
+
+        if (result.success) {
+          const structuredContent = extractStructuredContent(result.html, dispensary.url);
+
+          // Save cannabis data if detected
+          if (structuredContent.contentType === 'cannabis-product') {
+            try {
+              const saveResult = cannabisTracker.saveProduct(structuredContent.cannabis);
+              const persistentResult = await persistentTracker.saveStrain(structuredContent.cannabis);
+              console.log(`🌿 Cannabis data saved: strain_id=${saveResult.strain_id}, persistent_id=${persistentResult.strain_id}`);
+            } catch (error) {
+              console.error('Failed to save cannabis data:', error);
+            }
+          }
+
+          results.push({
+            dispensary: dispensary.name,
+            url: dispensary.url,
+            success: true,
+            contentType: structuredContent.contentType,
+            extractedData: structuredContent.cannabis || structuredContent,
+            processingTime: Date.now() - extractionStart,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          throw new Error(result.error || 'Extraction failed');
+        }
+      } catch (error) {
+        console.error(`❌ Failed to process ${dispensary.name}:`, error.message);
+        errors.push({
+          dispensary: dispensary.name,
+          url: dispensary.url,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Generate aggregated analytics
+    const cannabisResults = results.filter(r => r.contentType === 'cannabis-product');
+    const analytics = generateAggregationAnalytics(cannabisResults);
+
+    const response = {
+      success: true,
+      summary: {
+        totalDispensaries: dispensaries.length,
+        successfulExtractions: results.length,
+        failedExtractions: errors.length,
+        cannabisDataFound: cannabisResults.length,
+        totalProcessingTime: Date.now() - startTime
+      },
+      results,
+      errors,
+      analytics,
+      timestamp: new Date().toISOString()
+    };
+
+    // Save aggregation run to persistent storage
+    try {
+      const runId = await persistentTracker.saveAggregationRun(response);
+      response.aggregation_run_id = runId;
+      console.log(`📊 Aggregation run saved: ${runId}`);
+    } catch (error) {
+      console.error('Failed to save aggregation run:', error);
+    }
+
+    console.log(`✅ Batch aggregation complete: ${results.length}/${dispensaries.length} successful`);
+    res.json(response);
+  } catch (error) {
+    console.error('❌ Batch aggregation failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Batch aggregation failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Historical analytics endpoints
+app.get('/api/cannabis/trends', async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const trends = persistentTracker.getMarketTrends(days);
+
+    res.json({
+      success: true,
+      period_days: days,
+      trends,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get market trends',
+      details: error.message
+    });
+  }
+});
+
+app.get('/api/cannabis/history/:strainId', async (req, res) => {
+  try {
+    const { strainId } = req.params;
+    const days = parseInt(req.query.days) || 30;
+
+    const strainHistory = persistentTracker.getStrainHistory(strainId);
+    const priceHistory = persistentTracker.getPriceHistory(strainId, days);
+
+    if (!strainHistory) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strain not found',
+        strain_id: strainId
+      });
+    }
+
+    res.json({
+      success: true,
+      strain_id: strainId,
+      strain_history: strainHistory,
+      price_history: priceHistory,
+      period_days: days,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get strain history',
+      details: error.message
+    });
+  }
+});
+
+app.get('/api/cannabis/aggregation-history', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const history = persistentTracker.getAggregationHistory(limit);
+
+    res.json({
+      success: true,
+      aggregation_runs: history,
+      total_runs: history.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get aggregation history',
+      details: error.message
+    });
+  }
+});
+
+app.get('/api/cannabis/storage-stats', async (req, res) => {
+  try {
+    const stats = persistentTracker.getStorageStats();
+
+    res.json({
+      success: true,
+      storage_statistics: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get storage stats',
+      details: error.message
+    });
+  }
+});
+
+app.get('/api/cannabis/export', async (req, res) => {
+  try {
+    const exportData = persistentTracker.exportAllData();
+
+    res.json({
+      success: true,
+      export_data: exportData,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to export data',
+      details: error.message
+    });
+  }
+});
+
+// Helper function for aggregation analytics
+function generateAggregationAnalytics (cannabisResults) {
+  if (cannabisResults.length === 0) {
+    return { message: 'No cannabis data found for analysis' };
+  }
+
+  const strains = [];
+  const dispensaries = new Set();
+  const thcValues = [];
+  const cbdValues = [];
+  const prices = [];
+
+  cannabisResults.forEach(result => {
+    const data = result.extractedData;
+    dispensaries.add(result.dispensary);
+
+    if (data.strain?.name) {
+      strains.push({
+        name: data.strain.name,
+        type: data.strain.type,
+        dispensary: result.dispensary,
+        thc: data.potency?.thc?.percentage,
+        cbd: data.potency?.cbd?.percentage,
+        price: data.pricing?.current_price
+      });
+    }
+
+    if (data.potency?.thc?.percentage) thcValues.push(data.potency.thc.percentage);
+    if (data.potency?.cbd?.percentage) cbdValues.push(data.potency.cbd.percentage);
+    if (data.pricing?.current_price) prices.push(data.pricing.current_price);
+  });
+
+  return {
+    overview: {
+      totalStrains: strains.length,
+      uniqueDispensaries: dispensaries.size,
+      dispensaryList: Array.from(dispensaries)
+    },
+    potencyAnalysis: {
+      thc: {
+        average: thcValues.length > 0 ? (thcValues.reduce((a, b) => a + b, 0) / thcValues.length).toFixed(1) : null,
+        min: thcValues.length > 0 ? Math.min(...thcValues) : null,
+        max: thcValues.length > 0 ? Math.max(...thcValues) : null,
+        samples: thcValues.length
+      },
+      cbd: {
+        average: cbdValues.length > 0 ? (cbdValues.reduce((a, b) => a + b, 0) / cbdValues.length).toFixed(1) : null,
+        min: cbdValues.length > 0 ? Math.min(...cbdValues) : null,
+        max: cbdValues.length > 0 ? Math.max(...cbdValues) : null,
+        samples: cbdValues.length
+      }
+    },
+    pricingAnalysis: {
+      average: prices.length > 0 ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : null,
+      min: prices.length > 0 ? Math.min(...prices) : null,
+      max: prices.length > 0 ? Math.max(...prices) : null,
+      samples: prices.length
+    },
+    topStrains: strains.slice(0, 10),
+    timestamp: new Date().toISOString()
+  };
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled error:', err);
@@ -1589,35 +1884,35 @@ if (IS_AZURE) {
 // Start server (unless disabled for testing)
 if (!process.env.NO_SERVER_START) {
   app.listen(PORT, () => {
-  console.log(`🚀 hacksaws2x4 v3.0 running on port ${PORT}`);
-  console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : process.env.NODE_ENV || 'development'}`);
-  console.log('✨ Status: Core server operational, ready for extraction modules');
+    console.log(`🚀 hacksaws2x4 v3.0 running on port ${PORT}`);
+    console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : process.env.NODE_ENV || 'development'}`);
+    console.log('✨ Status: Core server operational, ready for extraction modules');
 
-  if (IS_AZURE) {
-    console.log('🔧 Azure Optimizations: Enabled');
-    console.log(`📊 Resource Limits: ${azureConfig.browser.maxConcurrent} browsers, ${azureConfig.browser.timeout}ms timeout`);
-    console.log(`⚡ Rate Limits: ${azureConfig.rateLimiting.standardMax}/15min standard, ${azureConfig.rateLimiting.browserMax}/15min browser`);
-    console.log(`🌐 Site URL: https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`);
-  } else {
-    console.log(`🏠 Local URL: http://localhost:${PORT}`);
-  }
+    if (IS_AZURE) {
+      console.log('🔧 Azure Optimizations: Enabled');
+      console.log(`📊 Resource Limits: ${azureConfig.browser.maxConcurrent} browsers, ${azureConfig.browser.timeout}ms timeout`);
+      console.log(`⚡ Rate Limits: ${azureConfig.rateLimiting.standardMax}/15min standard, ${azureConfig.rateLimiting.browserMax}/15min browser`);
+      console.log(`🌐 Site URL: https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net`);
+    } else {
+      console.log(`🏠 Local URL: http://localhost:${PORT}`);
+    }
 
-  console.log(`💊 Health Check: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/health`);
-  console.log(`📖 API Documentation: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/api/examples`);
-  console.log(`🎯 Interactive Frontend: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}`);
+    console.log(`💊 Health Check: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/health`);
+    console.log(`📖 API Documentation: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}/api/examples`);
+    console.log(`🎯 Interactive Frontend: ${IS_AZURE ? `https://${process.env.WEBSITE_SITE_NAME}.azurewebsites.net` : `http://localhost:${PORT}`}`);
 
-  console.log('');
-  console.log('✅ Implementation Status:');
-  console.log('  ✅ Core Express server with Azure optimization');
-  console.log('  ✅ Rate limiting and security middleware');
-  console.log('  ✅ Health checks and monitoring endpoints');
-  console.log('  ✅ Interactive frontend interface');
-  console.log('  ✅ CORS configuration for your domains');
-  console.log('  ✅ Browser emulation with Puppeteer active');
-  console.log('  ✅ Structured content extraction enabled');
-  console.log('  ✅ Popup handling automation working');
-  console.log('');
-  console.log('🚀 All features enabled and ready for production use!');
+    console.log('');
+    console.log('✅ Implementation Status:');
+    console.log('  ✅ Core Express server with Azure optimization');
+    console.log('  ✅ Rate limiting and security middleware');
+    console.log('  ✅ Health checks and monitoring endpoints');
+    console.log('  ✅ Interactive frontend interface');
+    console.log('  ✅ CORS configuration for your domains');
+    console.log('  ✅ Browser emulation with Puppeteer active');
+    console.log('  ✅ Structured content extraction enabled');
+    console.log('  ✅ Popup handling automation working');
+    console.log('');
+    console.log('🚀 All features enabled and ready for production use!');
   });
 }
 
