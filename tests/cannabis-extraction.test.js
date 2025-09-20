@@ -2,8 +2,15 @@
 // Tests for cannabis product extraction functionality
 
 const request = require('supertest');
-const app = require('../src/server');
 const { isCannabisContent, extractCannabisData } = require('../src/extractors/cannabis-extractor');
+
+// Import app only when needed to avoid server startup
+let app;
+beforeAll(() => {
+  // Set environment to prevent server auto-start
+  process.env.NO_SERVER_START = 'true';
+  app = require('../src/server');
+});
 
 describe('Cannabis Extraction Tests', () => {
 

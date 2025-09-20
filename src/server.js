@@ -1586,8 +1586,9 @@ if (IS_AZURE) {
   });
 }
 
-// Start server
-app.listen(PORT, () => {
+// Start server (unless disabled for testing)
+if (!process.env.NO_SERVER_START) {
+  app.listen(PORT, () => {
   console.log(`🚀 hacksaws2x4 v3.0 running on port ${PORT}`);
   console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : process.env.NODE_ENV || 'development'}`);
   console.log('✨ Status: Core server operational, ready for extraction modules');
@@ -1617,6 +1618,7 @@ app.listen(PORT, () => {
   console.log('  ✅ Popup handling automation working');
   console.log('');
   console.log('🚀 All features enabled and ready for production use!');
-});
+  });
+}
 
 module.exports = app;
