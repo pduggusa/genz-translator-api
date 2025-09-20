@@ -61,10 +61,10 @@ FROM dependencies AS runtime
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser -m appuser
 
-# Set up Playwright cache for non-root user
-RUN mkdir -p /home/appuser/.cache && \
+# Set up Playwright cache and data directory for non-root user
+RUN mkdir -p /home/appuser/.cache /app/data && \
     mv /root/.cache/ms-playwright /home/appuser/.cache/ 2>/dev/null || true && \
-    chown -R appuser:appuser /home/appuser/.cache
+    chown -R appuser:appuser /home/appuser/.cache /app/data
 
 # Copy application files (separate layer for source changes)
 COPY --chown=appuser:appuser src/ ./src/

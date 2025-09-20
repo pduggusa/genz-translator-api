@@ -10,8 +10,9 @@ const { extractStructuredContent } = require('./extractors/structured-extractor'
 const { cannabisTracker } = require('./database/cannabis-tracker');
 const { PersistentCannabisTracker } = require('./database/persistent-tracker');
 
-// Initialize persistent tracker
-const persistentTracker = new PersistentCannabisTracker('./data');
+// Initialize persistent tracker with fallback to temp directory
+const dataDir = process.env.DATA_DIR || (process.env.NODE_ENV === 'production' ? '/tmp/data' : './data');
+const persistentTracker = new PersistentCannabisTracker(dataDir);
 const { followLinksAndExtract, extractCannabisProducts } = require('./extractors/link-follower');
 
 const app = express();
