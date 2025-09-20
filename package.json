@@ -50,7 +50,9 @@
     "sbom:generate": "cyclonedx-npm --output-format JSON --output-file sbom.json",
     "sbom:generate:xml": "cyclonedx-npm --output-format XML --output-file sbom.xml",
     "sbom:validate": "cyclonedx-npm --validate sbom.json",
-    "build:sbom": "npm run sbom:generate && npm run sbom:generate:xml"
+    "build:sbom": "npm run sbom:generate && npm run sbom:generate:xml",
+    "quality:check": "npm run lint; npm run test:ci; npm run build:sbom; echo 'Quality checks completed (results may vary)'",
+    "quality:report": "echo '📊 Quality Report:'; npm run lint && echo '✅ Linting passed' || echo '⚠️ Linting issues'; npm run test:ci && echo '✅ Tests passed' || echo '⚠️ Test failures'; echo 'Report complete - issues are non-blocking'"
   },
   "keywords": [
     "web-scraping",

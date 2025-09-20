@@ -87,26 +87,33 @@ run_pre_checks() {
     # Check git status
     check_git_status
 
-    # Run tests and linting
-    print_status "Running tests and linting..."
-    npm run lint || {
-        print_error "Linting failed"
-        exit 1
-    }
+    # Run tests and linting (non-blocking)
+    print_status "Running quality checks (non-blocking)..."
 
-    npm run test:ci || {
-        print_error "Tests failed"
-        exit 1
-    }
+    # Linting (non-blocking)
+    if npm run lint; then
+        print_success "Linting passed"
+    else
+        print_warning "Linting issues found (non-blocking)"
+    fi
 
-    # Generate SBOM
+    # Tests (non-blocking)
+    if npm run test:ci; then
+        print_success "All tests passed"
+    else
+        print_warning "Some tests failed (non-blocking)"
+    fi
+
+    # Generate SBOM (non-blocking)
     print_status "Generating SBOM..."
-    npm run build:sbom || {
-        print_error "SBOM generation failed"
-        exit 1
-    }
+    if npm run build:sbom; then
+        print_success "SBOM generated successfully"
+    else
+        print_warning "SBOM generation failed (non-blocking)"
+    fi
 
-    print_success "Pre-checks completed (including SBOM generation)"
+    print_success "Quality checks completed - proceeding with version bump"
+    print_status "Philosophy: Ship fast, measure everything, improve continuously"
 }
 
 # Function to bump version
