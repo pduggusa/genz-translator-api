@@ -232,7 +232,7 @@ jobs:
         curl -f "$URL/health" || exit 1
         echo "✅ Health check passed"
 
-        # Test main functionality
+        # Test main functionality with regular content
         RESPONSE=$(curl -X POST "$URL/extract" \
           -H "Content-Type: application/json" \
           -d '{"url": "https://nypost.com"}' \
@@ -240,6 +240,32 @@ jobs:
 
         echo "$RESPONSE" | jq '.success' > /dev/null || exit 1
         echo "✅ API functionality validated"
+
+        # Test specialized cannabis content detection
+        echo "🌿 Testing cannabis content detection..."
+        CANNABIS_RESPONSE=$(curl -X POST "$URL/extract" \
+          -H "Content-Type: application/json" \
+          -d '{"url": "https://leafly.com"}' \
+          --silent --fail)
+
+        # Verify browser emulation was activated for cannabis site
+        BROWSER_ACTIVATED=$(echo "$CANNABIS_RESPONSE" | jq -r '.browserEmulation // false')
+        if [ "$BROWSER_ACTIVATED" = "true" ]; then
+          echo "✅ Cannabis detection: Browser emulation activated"
+        else
+          echo "❌ Cannabis detection failed: Browser emulation not activated"
+          exit 1
+        fi
+
+        # Verify regular sites don't use browser emulation
+        REGULAR_BROWSER=$(echo "$RESPONSE" | jq -r '.browserEmulation // false')
+        if [ "$REGULAR_BROWSER" = "false" ]; then
+          echo "✅ Regular content: HTTP mode used correctly"
+        else
+          echo "⚠️ Warning: Regular site used browser emulation unexpectedly"
+        fi
+
+        echo "✅ Specialized content detection validated"
 
     - name: Generate deployment report
       run: |
@@ -253,6 +279,8 @@ jobs:
           "branch": "${{ github.ref_name }}",
           "security_validated": true,
           "tests_passed": true,
+          "cannabis_detection_validated": true,
+          "browser_emulation_tested": true,
           "deployment_status": "success"
         }
         EOF
