@@ -33,3 +33,8 @@ build/
 *.temp
 .tmp/
 .temp/
+
+# SBOM files (generated during build/release)
+sbom.json
+sbom.xml
+*.sbom
