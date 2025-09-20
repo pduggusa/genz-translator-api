@@ -530,13 +530,13 @@ app.get('/api', (req, res) => {
       'javascript-rendering',
       'structured-content-extraction',
       'e-commerce-product-detection',
-      'cannabis-dispensary-extraction',
-      'strain-potency-analysis',
+      'challenging-website-data-extraction',
+      'specialized-content-analysis',
       'price-tracking-support',
       'inventory-monitoring',
       'deep-link-following',
       'historical-data-tracking',
-      'queryable-cannabis-database',
+      'queryable-content-database',
       IS_AZURE ? 'azure-app-service-optimized' : 'self-hosted-optimized'
     ],
     capabilities: {
@@ -554,6 +554,7 @@ app.get('/api', (req, res) => {
         'News articles with metadata',
         'Blog posts and content pages',
         'Product catalogs and listings',
+        'Challenging websites with complex structures',
         'JavaScript-heavy SPAs'
       ],
       outputFormats: [
@@ -571,11 +572,11 @@ app.get('/api', (req, res) => {
       'POST /api/track-products': 'Batch product monitoring',
       'GET /api/stats': 'Usage statistics and metrics',
       'GET /api/examples': 'Usage examples and documentation',
-      'GET /api/cannabis/strains': 'Search tracked specialized content items',
-      'GET /api/cannabis/strains/:id': 'Get content item details with tracking history',
-      'GET /api/cannabis/trends': 'Trends analysis for tracked content',
-      'GET /api/cannabis/analytics': 'Content tracking analytics dashboard',
-      'GET /api/cannabis/export': 'Export tracked content data for analysis'
+      'GET /api/content/items': 'Search tracked specialized content items',
+      'GET /api/content/items/:id': 'Get content item details with tracking history',
+      'GET /api/content/trends': 'Trends analysis for tracked content',
+      'GET /api/content/analytics': 'Content tracking analytics dashboard',
+      'GET /api/content/export': 'Export tracked content data for analysis'
     },
     resourceLimits: IS_AZURE
       ? {
@@ -617,9 +618,9 @@ async function handleFetchUrl (req, res) {
   // Track request stats
   requestStats.total++;
 
-  // Enhanced cannabis detection - force browser emulation for cannabis sites
+  // Enhanced challenging website detection - force browser emulation for complex sites
   const url = req.query.url || req.body?.url;
-  const cannabisPatterns = [
+  const challengingWebsitePatterns = [
     /cannabis/i,
     /dispensary/i,
     /dispensaries/i,
@@ -635,8 +636,8 @@ async function handleFetchUrl (req, res) {
     /menu/i
   ];
 
-  const isCannabisUrl = cannabisPatterns.some(pattern => pattern.test(url));
-  const useBrowser = isCannabisUrl || (req.query.browser !== 'false' && req.body?.browser !== false);
+  const isChallengingWebsite = challengingWebsitePatterns.some(pattern => pattern.test(url));
+  const useBrowser = isChallengingWebsite || (req.query.browser !== 'false' && req.body?.browser !== false);
   if (useBrowser) {
     requestStats.browserRequests++;
   } else {
@@ -702,8 +703,8 @@ async function handleFetchUrl (req, res) {
       }
     }
 
-    if (isCannabisUrl) {
-      console.log(`🌿 Cannabis site detected: ${url} - forcing browser emulation`);
+    if (isChallengingWebsite) {
+      console.log(`🔧 Challenging website detected: ${url} - forcing browser emulation`);
     }
     console.log(`🌐 Processing: ${url} (browser: ${useBrowser}, links: ${followLinks}, Azure: ${IS_AZURE})`);
 
@@ -797,14 +798,14 @@ async function handleFetchUrl (req, res) {
       requestStats.productPages++;
     } else if (structuredContent.contentType === 'article') {
       requestStats.articlePages++;
-    } else if (structuredContent.contentType === 'cannabis-product') {
+    } else if (structuredContent.contentType === 'specialized-product') {
       requestStats.productPages++;
-      // Save cannabis data for historical tracking
+      // Save specialized content data for historical tracking
       try {
-        const saveResult = cannabisTracker.saveProduct(structuredContent.cannabis);
-        console.log(`🌿 Cannabis data saved: strain_id=${saveResult.strain_id}`);
+        const saveResult = cannabisTracker.saveProduct(structuredContent.specializedData || structuredContent.cannabis);
+        console.log(`📊 Specialized content data saved: item_id=${saveResult.strain_id}`);
       } catch (error) {
-        console.error('Failed to save cannabis data:', error);
+        console.error('Failed to save specialized content data:', error);
       }
     }
 
@@ -851,26 +852,26 @@ async function handleFetchUrl (req, res) {
           timeout: IS_AZURE ? 20000 : 25000
         });
 
-        // Extract cannabis products if this is a cannabis site
-        if (structuredContent.contentType === 'cannabis-product') {
-          const cannabisProducts = extractCannabisProducts(followResults);
+        // Extract specialized products if this is a challenging website
+        if (structuredContent.contentType === 'specialized-product') {
+          const specializedProducts = extractCannabisProducts(followResults);
 
-          // Save each cannabis product
-          for (const product of cannabisProducts) {
+          // Save each specialized product
+          for (const product of specializedProducts) {
             try {
               const saveResult = cannabisTracker.saveProduct(product);
-              console.log(`🌿 Cannabis product saved: strain_id=${saveResult.strain_id}`);
+              console.log(`📊 Specialized product saved: item_id=${saveResult.strain_id}`);
             } catch (error) {
-              console.error('Failed to save cannabis product:', error);
+              console.error('Failed to save specialized product:', error);
             }
           }
 
           response.linkedContent = {
-            cannabis_products: cannabisProducts,
+            specialized_products: specializedProducts,
             summary: {
               total_links_found: followResults.totalLinksFound,
               links_processed: followResults.linksProcessed,
-              cannabis_products_found: cannabisProducts.length,
+              specialized_products_found: specializedProducts.length,
               successful_extractions: followResults.successful,
               errors: followResults.errors
             }
@@ -971,8 +972,8 @@ async function handleExtract (req, res) {
       // maxLinksPerPage = 5 // Reserved for future pagination
     } = req.body;
 
-    // Enhanced cannabis detection - force browser emulation for cannabis sites
-    const cannabisPatterns = [
+    // Enhanced challenging website detection - force browser emulation for complex sites
+    const challengingWebsitePatterns = [
       /cannabis/i,
       /dispensary/i,
       /dispensaries/i,
@@ -988,8 +989,8 @@ async function handleExtract (req, res) {
       /menu/i
     ];
 
-    const isCannabisUrl = cannabisPatterns.some(pattern => pattern.test(url));
-    const finalBrowserEmulation = isCannabisUrl || enableBrowserEmulation;
+    const isChallengingWebsite = challengingWebsitePatterns.some(pattern => pattern.test(url));
+    const finalBrowserEmulation = isChallengingWebsite || enableBrowserEmulation;
 
     if (!url) {
       return res.status(400).json({
@@ -1020,8 +1021,8 @@ async function handleExtract (req, res) {
       });
     }
 
-    if (isCannabisUrl) {
-      console.log(`🌿 Cannabis site detected: ${url} - forcing browser emulation`);
+    if (isChallengingWebsite) {
+      console.log(`🔧 Challenging website detected: ${url} - forcing browser emulation`);
     }
     console.log(`🌐 Extract request: ${url} (browser: ${finalBrowserEmulation}, links: ${followLinks})`);
 

@@ -361,7 +361,7 @@
     <div class="container">
         <div class="header">
             <h1>🪚 hacksaws2x4</h1>
-            <p>Gen Z Translator API - Advanced content extraction with cannabis specialty features</p>
+            <p>Gen Z Translator API - Advanced content extraction with challenging website specialty features</p>
         </div>
 
         <div class="content">
@@ -373,7 +373,7 @@
             <!-- Navigation Tabs -->
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <button class="view-btn active" onclick="showTab('extraction')" id="extractionTab">🧪 Content Extraction</button>
-                <button class="view-btn" onclick="showTab('cannabis')" id="cannabisTab">🌿 Cannabis Search</button>
+                <button class="view-btn" onclick="showTab('cannabis')" id="cannabisTab">🔬 Specialized Content Search</button>
                 <button class="view-btn" onclick="showTab('analytics')" id="analyticsTab">📊 Analytics</button>
             </div>
 
@@ -385,16 +385,16 @@
                 <div class="form-group">
                     <label for="urlInput">Target URL</label>
                     <input type="url" id="urlInput"
-                           placeholder="leafly.com, weedmaps.com, or any website URL"
-                           value="leafly.com"
+                           placeholder="example.com, or any challenging website URL"
+                           value="example.com"
                            list="urlSuggestions">
                     <datalist id="urlSuggestions">
-                        <option value="leafly.com">
-                        <option value="weedmaps.com">
+                        <option value="example.com">
+                        <option value="reddit.com">
                         <option value="nypost.com">
                         <option value="amazon.com">
                         <option value="ebay.com">
-                        <option value="reddit.com">
+                        <option value="github.com">
                     </datalist>
                 </div>
 
@@ -419,29 +419,29 @@
                 </div>
             </div>
 
-            <!-- Cannabis Search Tab -->
+            <!-- Specialized Content Search Tab -->
             <div id="cannabisContent" class="tab-content" style="display: none;">
                 <div class="api-form">
-                    <h3>🌿 Cannabis Strain Search</h3>
-                    <p>Search for cannabis strains with advanced filtering options</p>
+                    <h3>🔬 Specialized Content Search</h3>
+                    <p>Search for specialized content items with advanced filtering options</p>
 
                     <div class="form-group">
-                        <label for="strainType">Strain Type</label>
+                        <label for="strainType">Content Type</label>
                         <select id="strainType">
                             <option value="">All Types</option>
-                            <option value="indica">Indica</option>
-                            <option value="sativa">Sativa</option>
-                            <option value="hybrid">Hybrid</option>
+                            <option value="indica">Type A</option>
+                            <option value="sativa">Type B</option>
+                            <option value="hybrid">Mixed Type</option>
                         </select>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
-                            <label for="thcMin">Min THC %</label>
+                            <label for="thcMin">Min Value %</label>
                             <input type="number" id="thcMin" min="0" max="100" placeholder="e.g. 20">
                         </div>
                         <div class="form-group">
-                            <label for="thcMax">Max THC %</label>
+                            <label for="thcMax">Max Value %</label>
                             <input type="number" id="thcMax" min="0" max="100" placeholder="e.g. 30">
                         </div>
                     </div>
@@ -452,7 +452,7 @@
                     </div>
 
                     <button onclick="searchStrains()" id="cannabisBtn">
-                        🔍 Search Strains
+                        🔍 Search Content
                     </button>
                 </div>
             </div>
@@ -460,8 +460,8 @@
             <!-- Analytics Tab -->
             <div id="analyticsContent" class="tab-content" style="display: none;">
                 <div class="api-form">
-                    <h3>📊 Cannabis Analytics</h3>
-                    <p>View market trends and usage statistics</p>
+                    <h3>📊 Content Analytics</h3>
+                    <p>View content trends and usage statistics</p>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
                         <button onclick="loadAnalytics()" class="view-btn">📈 Market Trends</button>

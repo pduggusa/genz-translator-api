@@ -142,7 +142,7 @@ npm run build:optimized     # 3-5 minutes with caching
 npm run test:unit          # Unit tests
 npm run test:integration   # API integration tests
 npm run test:e2e          # End-to-end browser tests
-npm run test:cannabis     # Specialized content functionality
+npm run test:specialized  # Specialized content functionality
 npm run test:security     # Security validation tests
 
 # Generate comprehensive coverage report
@@ -203,7 +203,7 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
     "security_tests": {"coverage": 95.2, "tests": 45},
     "unit_tests": {"coverage": 85.3, "tests": 28},
     "integration_tests": {"coverage": 78.1, "tests": 15},
-    "cannabis_tests": {"coverage": 91.7, "tests": 12},
+    "specialized_tests": {"coverage": 91.7, "tests": 12},
     "e2e_tests": {"coverage": 72.4, "tests": 8}
   }
 }
@@ -215,8 +215,8 @@ The API intelligently detects specialized content types and automatically activa
 
 **Specialized sites detected:**
 - `leafly.com` ✅ Browser emulation activated
-- `risecannabis.com` ✅ Browser emulation activated
-- `dispensary` keyword URLs ✅ Browser emulation activated
+- Complex websites with challenging structures ✅ Browser emulation activated
+- Specialized content websites ✅ Browser emulation activated
 
 **Regular sites:**
 - `nypost.com` ❌ Fast HTTP extraction used

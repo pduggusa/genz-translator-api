@@ -1,5 +1,5 @@
 // tests/cannabis-extraction.test.js
-// Tests for cannabis product extraction functionality
+// Tests for specialized content extraction functionality
 
 const request = require('supertest');
 const { isCannabisContent, extractCannabisData } = require('../src/extractors/cannabis-extractor');
@@ -12,11 +12,11 @@ beforeAll(() => {
   app = require('../src/server');
 });
 
-describe('Cannabis Extraction Tests', () => {
+describe('Specialized Content Extraction Tests', () => {
 
-    describe('Cannabis Content Detection', () => {
-        test('should detect cannabis content from HTML', () => {
-            const cannabisHtml = `
+    describe('Specialized Content Detection', () => {
+        test('should detect specialized content from HTML', () => {
+            const specializedHtml = `
                 <html>
                     <body>
                         <h1>Premium Cannabis Dispensary</h1>
