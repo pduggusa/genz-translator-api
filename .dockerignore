@@ -1,0 +1,82 @@
+# 🚀 Optimized .dockerignore for faster builds
+
+# Development files
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+test-results/
+*.test.js
+tests/
+
+# Documentation
+*.md
+docs/
+RETROSPECTIVE.md
+ARCHITECTURE.md
+
+# Git
+.git
+.gitignore
+.github/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Security reports (generated files)
+security-*.json
+security-*.xml
+sbom.json
+sbom.xml
+
+# Cache directories
+.npm/
+.cache/
+.temp/
+
+# Environment files (keep .env.example for reference)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Legacy files
+package-simple.json
+server-simple.js
+*.old
+*.backup
+
+# Docker files (avoid recursion)
+Dockerfile*
+.dockerignore
+docker-compose.yml
+
+# CI/CD files
+.github/workflows/
+
+# Scripts (not needed in container)
+scripts/
+
+# Coverage and test output
+jest.config.js
+.nyc_output/
+coverage/

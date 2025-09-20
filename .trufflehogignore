@@ -1,0 +1,35 @@
+# TruffleHog ignore patterns for hacksaws2x4
+
+# Test data
+tests/
+*.test.js
+*.spec.js
+
+# Documentation
+docs/
+*.md
+README.md
+
+# Configuration files
+.github/
+.vscode/
+.idea/
+
+# Build artifacts
+node_modules/
+coverage/
+dist/
+build/
+
+# Generated reports
+security-*.json
+security-*.xml
+sbom.json
+sbom.xml
+
+# Git history
+.git/
+
+# Cache directories
+.cache/
+.npm/

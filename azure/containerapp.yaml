@@ -1,0 +1,107 @@
+# Azure Container Apps Deployment Configuration
+# Optimized for production with ACR-only deployment
+
+location: Central US
+resourceGroup: dugganusa-RG
+name: hacksaws2x4
+type: Microsoft.App/containerApps
+
+properties:
+  managedEnvironmentId: /subscriptions/fd8c1b99-48ca-4a8b-8a5c-c92d76b64fbc/resourceGroups/dugganusa-RG/providers/Microsoft.App/managedEnvironments/genz-translator-env
+
+  configuration:
+    # Only pull from ACR - no Docker Hub fallback
+    registries:
+      - server: genztranslatoracrcentralus.azurecr.io
+        username: genztranslatoracrcentralus
+        passwordSecretRef: acr-password
+
+    # Security-first ingress
+    ingress:
+      external: true
+      targetPort: 3000
+      traffic:
+        - weight: 100
+          latestRevision: true
+      corsPolicy:
+        allowedOrigins:
+          - "*"
+        allowedMethods:
+          - GET
+          - POST
+          - OPTIONS
+        allowedHeaders:
+          - "*"
+
+    # Production secrets (configured via Azure CLI)
+    secrets:
+      - name: acr-password
+        # ACR password configured via: az containerapp registry set
+
+    # Auto-scaling configuration
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-rule
+          http:
+            metadata:
+              concurrentRequests: "10"
+
+  template:
+    # Production container specification
+    containers:
+      - name: hacksaws2x4
+        # ONLY use ACR images - production tag for stability
+        image: genztranslatoracrcentralus.azurecr.io/hacksaws2x4:production
+
+        # Production resource allocation
+        resources:
+          cpu: 1.0
+          memory: 2Gi
+
+        # Environment variables
+        env:
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: "3000"
+          - name: SECURITY_TESTING
+            value: "false"
+
+        # Health probes
+        probes:
+          - type: Startup
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          - type: Liveness
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          - type: Readiness
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+# Deployment metadata
+tags:
+  project: hacksaws2x4
+  version: v3.0.0
+  environment: production
+  security: enterprise-grade
+  registry: acr-only

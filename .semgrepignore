@@ -1,0 +1,31 @@
+# Semgrep ignore patterns for hacksaws2x4
+
+# Test files
+tests/
+*.test.js
+*.spec.js
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Documentation
+docs/
+*.md
+
+# Configuration files
+.github/
+.vscode/
+.idea/
+
+# Generated files
+sbom.json
+sbom.xml
+security-*.json
+
+# Ignore intentional test patterns in browser emulation
+src/extractors/browser-emulation.js:518

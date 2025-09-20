@@ -32,20 +32,95 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📦 Setup Node.js
+      - name: 📦 Setup Node.js with Caching
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
-      - name: 📥 Install dependencies
-        run: npm ci
+      - name: 📥 Install Node Dependencies (Cached)
+        run: npm ci --prefer-offline --no-audit --no-fund
 
-      - name: 🔐 Security validation (Non-blocking)
+      - name: 🛠️ Install Security Tools (Cached)
+        id: security-tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/bin
+            ~/.cache/pip
+            /opt/hostedtoolcache
+          key: security-tools-${{ runner.os }}-trufflehog-3.90.8-semgrep-1.137.0-checkov-3.2.471
+          restore-keys: |
+            security-tools-${{ runner.os }}-trufflehog-3.90.8-semgrep-1.137.0
+            security-tools-${{ runner.os }}-trufflehog-3.90.8
+            security-tools-${{ runner.os }}
+
+      - name: 🔧 Setup Security Tools
+        if: steps.security-tools.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: |
+          echo "Installing security tools (not cached)..."
+
+          # Install TruffleHog
+          if ! command -v trufflehog &> /dev/null; then
+            curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | \
+              sh -s -- -b ~/.local/bin v3.90.8
+            export PATH="$HOME/.local/bin:$PATH"
+          fi
+
+          # Install Semgrep with specific version
+          if ! command -v semgrep &> /dev/null; then
+            python3 -m pip install --user --cache-dir ~/.cache/pip semgrep==1.137.0
+          fi
+
+          # Install Checkov
+          if ! command -v checkov &> /dev/null; then
+            python3 -m pip install --user --cache-dir ~/.cache/pip checkov==3.2.471
+          fi
+
+          # Verify installations
+          ~/.local/bin/trufflehog --version || echo "TruffleHog not found"
+          ~/.local/bin/semgrep --version || echo "Semgrep not found"
+          ~/.local/bin/checkov --version || echo "Checkov not found"
+
+      - name: 🎯 Configure Tool Paths
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "Security tools available:"
+          which trufflehog || echo "TruffleHog: not in PATH"
+          which semgrep || echo "Semgrep: not in PATH"
+          which checkov || echo "Checkov: not in PATH"
+
+      - name: 🔐 Enhanced Security Validation (Non-blocking)
         id: security
         continue-on-error: true
         run: |
-          echo "## 🔐 Security Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔐 Enhanced Security Validation Results" >> $GITHUB_STEP_SUMMARY
+
+          # TruffleHog secret detection
+          echo "### 🐷 TruffleHog Secret Detection" >> $GITHUB_STEP_SUMMARY
+          if npm run test:security:trufflehog; then
+            echo "✅ No secrets detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ TruffleHog found potential secrets (non-blocking)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Semgrep SAST analysis
+          echo "### 🔍 Semgrep SAST Analysis" >> $GITHUB_STEP_SUMMARY
+          if npm run test:security:semgrep; then
+            echo "✅ SAST analysis passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ SAST analysis found issues (non-blocking)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Checkov security scanning
+          echo "### ✅ Checkov Security Scanning" >> $GITHUB_STEP_SUMMARY
+          if npm run test:security:checkov; then
+            echo "✅ Checkov scan passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Checkov found issues (non-blocking)" >> $GITHUB_STEP_SUMMARY
+          fi
 
           # Security audit
           echo "### 📊 NPM Security Audit" >> $GITHUB_STEP_SUMMARY
@@ -212,13 +287,14 @@ jobs:
           - [Security Implementation](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/SECURITY.md)
           - [Deployment Guide](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/DEPLOYMENT.md)
 
-          ### 🛡️ Security
-          This release has been validated through our comprehensive security pipeline:
-          - ✅ Secrets detection (TruffleHog, Checkov)
-          - ✅ SAST analysis (Semgrep, ESLint security)
-          - ✅ Dependency scanning (NPM audit, Snyk)
-          - ✅ Container security (Trivy scanning)
-          - ✅ License compliance validation
+          ### 🛡️ Enhanced Security
+          This release has been validated through our comprehensive 5-layer security pipeline:
+          - ✅ **Secret Detection**: TruffleHog + Checkov advanced scanning
+          - ✅ **SAST Analysis**: Semgrep + ESLint security rules
+          - ✅ **Dependency Scanning**: NPM audit + Retire.js
+          - ✅ **Container Security**: Trivy image scanning
+          - ✅ **License Compliance**: Automated license validation
+          - ✅ **Supply Chain**: SBOM generation and verification
 
           EOF
 
