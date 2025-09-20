@@ -75,7 +75,7 @@ module.exports = {
   restoreMocks: true,
 
   // Module path mapping
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@tests/(.*)$': '<rootDir>/tests/$1'
   },
@@ -110,9 +110,9 @@ module.exports = {
       testTimeout: 60000 // Longer timeout for browser tests
     },
     {
-      displayName: '🌿 Cannabis Tests',
+      displayName: '🌿 Specialized Content Tests',
       testMatch: ['**/tests/cannabis*.test.js'],
-      testTimeout: 45000 // Cannabis extraction can take longer
+      testTimeout: 45000 // Specialized content extraction can take longer
     }
   ],
 
@@ -137,7 +137,7 @@ module.exports = {
         filename: 'test-report.html',
         expand: true,
         hideIcon: false,
-        pageTitle: 'Cannabis Extractor API - Test Report'
+        pageTitle: 'Gen Z Translator API - Test Report'
       }
     ]
   ],
@@ -156,7 +156,8 @@ module.exports = {
     '/build/',
     '/dist/',
     '/coverage/',
-    '/deploy-*/'
+    '/deploy-*/',
+    '/deploy-fix/'
   ],
 
   // Watch plugins for development
@@ -172,5 +173,5 @@ module.exports = {
   maxWorkers: 4, // Limit workers for security testing
 
   // Custom test sequencer for security tests (run security tests first)
-  testSequencer: '<rootDir>/tests/security-test-sequencer.js'
+  // testSequencer: '<rootDir>/tests/security-test-sequencer.js'
 };

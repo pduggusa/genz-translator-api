@@ -8,9 +8,10 @@ on:
   workflow_dispatch:
 
 env:
+  VERSION: "3.0.0"
   REGISTRY_NAME: genztranslatoracr
   REGISTRY_LOGIN_SERVER: genztranslatoracr.azurecr.io
-  IMAGE_NAME: cannabis-extractor-api
+  IMAGE_NAME: genz-translator-api
   RESOURCE_GROUP: dugganusa-RG
   CONTAINER_APP_NAME: genz-translator-api
   CONTAINER_APP_ENVIRONMENT: genz-translator-env
@@ -169,13 +170,13 @@ jobs:
         curl -f ${{ steps.get-url.outputs.DEPLOYMENT_URL }}/health || exit 1
         echo "✅ Health check passed"
 
-    - name: Test cannabis extraction endpoint
+    - name: Test content extraction endpoint
       run: |
         curl -X POST ${{ steps.get-url.outputs.DEPLOYMENT_URL }}/extract \
           -H "Content-Type: application/json" \
           -d '{"url": "https://nypost.com"}' \
           --fail --silent --show-error || exit 1
-        echo "✅ Cannabis extraction endpoint test passed"
+        echo "✅ Content extraction endpoint test passed"
 
   # ============================================
   # Post-Deployment Validation
@@ -216,14 +217,14 @@ jobs:
         HEADERS=$(curl -I -s ${{ steps.get-url.outputs.DEPLOYMENT_URL }}/health)
         echo "$HEADERS" | grep -i "x-frame-options\|x-content-type-options\|x-xss-protection" || echo "⚠️ Security headers missing"
 
-        # Test cannabis extraction functionality
+        # Test content extraction functionality
         RESPONSE=$(curl -X POST ${{ steps.get-url.outputs.DEPLOYMENT_URL }}/extract \
           -H "Content-Type: application/json" \
           -d '{"url": "https://nypost.com"}' \
           --silent)
 
         echo "$RESPONSE" | jq '.count' > /dev/null || exit 1
-        echo "✅ Cannabis extraction functionality validated"
+        echo "✅ Content extraction functionality validated"
 
     - name: Generate deployment report
       run: |
@@ -249,7 +250,7 @@ jobs:
     - name: Success notification
       run: |
         echo "🎉 DEPLOYMENT SUCCESSFUL!"
-        echo "📱 Cannabis Extractor API deployed to: ${{ steps.get-url.outputs.DEPLOYMENT_URL }}"
+        echo "📱 Gen Z Translator API deployed to: ${{ steps.get-url.outputs.DEPLOYMENT_URL }}"
         echo "🛡️ Security validation: PASSED"
         echo "✅ Health check: PASSED"
         echo "🧪 Functionality test: PASSED"

@@ -1,13 +1,13 @@
-# 🔧 hacksaws2x4
+# 🔧 Gen Z Translator API v3.0.0
 
+[![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=for-the-badge)](.)
 [![Security Status](https://img.shields.io/badge/Security-Enterprise%20Grade-brightgreen?style=for-the-badge&logo=shield)](.)
-[![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
-[![Zero Trust](https://img.shields.io/badge/Zero%20Trust-5%20Stage%20Pipeline-red?style=for-the-badge&logo=security)](.)
-[![Security Scanning](https://img.shields.io/badge/Security-7%20Scan%20Types-yellow?style=for-the-badge&logo=searchengin)](.)
+[![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://genz-translator-api.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
+[![Build Status](https://img.shields.io/badge/Build-Simplified%20Pipeline-success?style=for-the-badge&logo=github)](.)
 [![Test Coverage](https://img.shields.io/badge/Coverage-90%25%20Security-success?style=for-the-badge&logo=jest)](.)
 [![Firefox Ready](https://img.shields.io/badge/Firefox-Browser%20Automation-ff7139?style=for-the-badge&logo=firefox)](.)
 
-Enterprise-grade content extraction API with **5-stage security-first deployment pipeline** and comprehensive vulnerability scanning.
+Enterprise-grade content extraction API v3.0.0 with **simplified 3-stage deployment pipeline** and essential security scanning.
 
 ## 🛡️ Enterprise Security Implementation
 
@@ -23,7 +23,7 @@ This API implements a **5-stage security-first deployment pipeline** with zero-t
 ### 🧪 Stage 2: Comprehensive Testing
 - **Multi-Node.js Testing** - 18.x and 20.x validation
 - **Security Test Priority** - Security tests run first (mandatory pass)
-- **Cannabis Functionality** - Specialized cannabis extraction testing
+- **Content Detection** - Specialized content type detection and extraction testing
 - **Performance Monitoring** - Response time and memory usage validation
 
 ### 🐳 Stage 3: Secure Container Build
@@ -36,7 +36,7 @@ This API implements a **5-stage security-first deployment pipeline** with zero-t
 - **Container Apps** - Azure Container Apps with auto-scaling
 - **Post-deployment Validation** - Health and functionality verification
 - **Security Header Validation** - HTTPS enforcement and security headers
-- **Cannabis Extraction Testing** - Live functionality validation
+- **Content Extraction Testing** - Live functionality validation
 
 ### 🚨 Stage 5: Failure Handling & Rollback
 - **Automatic Rollback** - Failed deployments auto-revert
@@ -59,7 +59,7 @@ This API implements a **5-stage security-first deployment pipeline** with zero-t
 curl -I "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/health"
 # Expected: Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
 
-# Test cannabis site detection with browser emulation
+# Test specialized content detection with browser emulation
 curl -X POST "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/extract" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://leafly.com"}' | jq '.'
@@ -97,7 +97,7 @@ done
 npm run build:fast
 
 # Run the optimized container
-docker run -p 3000:3000 cannabis-extractor:local-fast
+docker run -p 3000:3000 genz-translator:local-fast
 
 # Test at http://localhost:3000
 ```
@@ -142,7 +142,7 @@ npm run build:optimized     # 3-5 minutes with caching
 npm run test:unit          # Unit tests
 npm run test:integration   # API integration tests
 npm run test:e2e          # End-to-end browser tests
-npm run test:cannabis     # Cannabis-specific functionality
+npm run test:cannabis     # Specialized content functionality
 npm run test:security     # Security validation tests
 
 # Generate comprehensive coverage report
@@ -156,17 +156,17 @@ NODE_ENV=development npm start
 
 ```bash
 # Build and test container locally
-docker build -f Dockerfile.containerapp -t cannabis-extractor:local .
+docker build -f Dockerfile.containerapp -t genz-translator:local .
 
 # Run container with security validation
 docker run -p 3000:3000 \
   -e NODE_ENV=development \
   -e SECURITY_TESTING=true \
-  cannabis-extractor:local
+  genz-translator:local
 
 # Test container security
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image cannabis-extractor:local
+  aquasec/trivy image genz-translator:local
 ```
 
 ## 📋 Security Validation Dashboard
@@ -209,11 +209,11 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
 }
 ```
 
-## 🌿 Cannabis Content Detection
+## 🌿 Specialized Content Detection
 
-The API intelligently detects cannabis-related content and automatically activates browser emulation:
+The API intelligently detects specialized content types and automatically activates browser emulation:
 
-**Cannabis sites detected:**
+**Specialized sites detected:**
 - `leafly.com` ✅ Browser emulation activated
 - `risecannabis.com` ✅ Browser emulation activated
 - `dispensary` keyword URLs ✅ Browser emulation activated
@@ -292,7 +292,7 @@ POST /extract
 # Security validation
 npm run lint
 
-# Cannabis detection test
+# Specialized content detection test
 curl -X POST "http://localhost:3000/extract" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://leafly.com"}'

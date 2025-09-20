@@ -562,16 +562,16 @@ app.get('/api', (req, res) => {
     endpoints: {
       'GET /health': 'System health and diagnostics',
       'GET /api': 'Service information and capabilities',
-      'GET/POST /api/fetch-url': 'Universal content extraction with cannabis support',
+      'GET/POST /api/fetch-url': 'Universal content extraction with specialized content support',
       'GET /api/product': 'Specialized product extraction',
       'POST /api/track-products': 'Batch product monitoring',
       'GET /api/stats': 'Usage statistics and metrics',
       'GET /api/examples': 'Usage examples and documentation',
-      'GET /api/cannabis/strains': 'Search tracked cannabis strains',
-      'GET /api/cannabis/strains/:id': 'Get strain details with price history',
-      'GET /api/cannabis/trends': 'Price trends analysis for strains',
-      'GET /api/cannabis/analytics': 'Cannabis tracking analytics dashboard',
-      'GET /api/cannabis/export': 'Export cannabis data for analysis'
+      'GET /api/cannabis/strains': 'Search tracked specialized content items',
+      'GET /api/cannabis/strains/:id': 'Get content item details with tracking history',
+      'GET /api/cannabis/trends': 'Trends analysis for tracked content',
+      'GET /api/cannabis/analytics': 'Content tracking analytics dashboard',
+      'GET /api/cannabis/export': 'Export tracked content data for analysis'
     },
     resourceLimits: IS_AZURE
       ? {
