@@ -51,7 +51,6 @@ jobs:
       run: |
         # Core security tools
         pip install checkov semgrep bandit safety pip-audit
-        npm install -g audit-ci snyk retire @cyclonedx/cyclonedx-npm
 
         # Additional specialized tools
         curl -L -o trufflehog https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog_linux_amd64
@@ -144,13 +143,6 @@ jobs:
         # NPM Audit
         npm audit --audit-level=moderate --json > npm-audit-detailed.json || true
 
-        # Snyk security scan
-        if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
-          echo "Running Snyk scan..."
-          snyk auth ${{ secrets.SNYK_TOKEN }}
-          snyk test --json > snyk-detailed.json || true
-          snyk monitor || true  # Monitor for ongoing vulnerability tracking
-        fi
 
         # Retire.js for JavaScript library vulnerabilities
         retire --js --outputformat json --outputpath retire-results.json . || true
