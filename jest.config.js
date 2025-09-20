@@ -137,7 +137,7 @@ module.exports = {
         filename: 'test-report.html',
         expand: true,
         hideIcon: false,
-        pageTitle: 'Gen Z Translator API - Test Report'
+        pageTitle: 'hacksaws2x4 - Test Report'
       }
     ]
   ],

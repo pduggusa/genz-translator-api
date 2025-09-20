@@ -1,8 +1,8 @@
-# 🔧 Gen Z Translator API v3.0.0
+# 🔧 hacksaws2x4 v3.0.0
 
 [![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=for-the-badge)](.)
 [![Security Status](https://img.shields.io/badge/Security-Enterprise%20Grade-brightgreen?style=for-the-badge&logo=shield)](.)
-[![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://genz-translator-api.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
+[![Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078d7?style=for-the-badge&logo=microsoftazure)](https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/)
 [![Build Status](https://img.shields.io/badge/Build-Simplified%20Pipeline-success?style=for-the-badge&logo=github)](.)
 [![Test Coverage](https://img.shields.io/badge/Coverage-90%25%20Security-success?style=for-the-badge&logo=jest)](.)
 [![Firefox Ready](https://img.shields.io/badge/Firefox-Browser%20Automation-ff7139?style=for-the-badge&logo=firefox)](.)
@@ -48,7 +48,7 @@ This API implements a **5-stage security-first deployment pipeline** with zero-t
 
 ## 🚀 Live Deployment
 
-**🐳 Container Apps (Primary):** https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/
+**🐳 Container Apps (Primary):** https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/
 
 **📱 Web App (Legacy):** https://genz-translator-api.azurewebsites.net/
 
@@ -56,17 +56,17 @@ This API implements a **5-stage security-first deployment pipeline** with zero-t
 
 ```bash
 # Test health endpoint with security validation
-curl -I "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/health"
+curl -I "https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/health"
 # Expected: Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
 
 # Test specialized content detection with browser emulation
-curl -X POST "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/extract" \
+curl -X POST "https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/extract" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://leafly.com"}' | jq '.'
 # Expected: {"success": true, "browserEmulation": true, "products": [...]}
 
 # Test regular content extraction (fast HTTP mode)
-curl -X POST "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/extract" \
+curl -X POST "https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/extract" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://nypost.com"}' | jq '.'
 # Expected: {"success": true, "browserEmulation": false, "content": "..."}
@@ -74,7 +74,7 @@ curl -X POST "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azur
 # Test rate limiting and security
 for i in {1..15}; do
   curl -s -o /dev/null -w "%{http_code} " \
-    "https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/health"
+    "https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/health"
 done
 # Expected: Some 429 responses after hitting rate limit
 ```
@@ -97,7 +97,7 @@ done
 npm run build:fast
 
 # Run the optimized container
-docker run -p 3000:3000 genz-translator:local-fast
+docker run -p 3000:3000 hacksaws2x4:local-fast
 
 # Test at http://localhost:3000
 ```
@@ -156,17 +156,17 @@ NODE_ENV=development npm start
 
 ```bash
 # Build and test container locally
-docker build -f Dockerfile.containerapp -t genz-translator:local .
+docker build -f Dockerfile.containerapp -t hacksaws2x4:local .
 
 # Run container with security validation
 docker run -p 3000:3000 \
   -e NODE_ENV=development \
   -e SECURITY_TESTING=true \
-  genz-translator:local
+  hacksaws2x4:local
 
 # Test container security
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image genz-translator:local
+  aquasec/trivy image hacksaws2x4:local
 ```
 
 ## 📋 Security Validation Dashboard
@@ -308,7 +308,7 @@ curl -X POST "http://localhost:3000/extract" \
 ## 🚀 Production Deployment Architecture
 
 ### 🐳 Azure Container Apps (Primary Production)
-**URL:** https://cannabis-extractor-app.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/
+**URL:** https://hacksaws2x4.orangesmoke-f5bb9d29.centralus.azurecontainerapps.io/
 
 **🔧 Configuration:**
 - **Environment:** `genz-translator-env` (Central US)

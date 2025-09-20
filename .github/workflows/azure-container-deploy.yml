@@ -11,10 +11,10 @@ env:
   VERSION: "3.0.0"
   REGISTRY_NAME: genztranslatoracr
   REGISTRY_LOGIN_SERVER: genztranslatoracr.azurecr.io
-  IMAGE_NAME: genz-translator-api
+  IMAGE_NAME: hacksaws2x4
   RESOURCE_GROUP: dugganusa-RG
-  CONTAINER_APP_NAME: genz-translator-api
-  CONTAINER_APP_ENVIRONMENT: genz-translator-env
+  CONTAINER_APP_NAME: hacksaws2x4
+  CONTAINER_APP_ENVIRONMENT: hacksaws2x4-env
 
 jobs:
 
@@ -250,7 +250,7 @@ jobs:
     - name: Success notification
       run: |
         echo "🎉 DEPLOYMENT SUCCESSFUL!"
-        echo "📱 Gen Z Translator API deployed to: ${{ steps.get-url.outputs.DEPLOYMENT_URL }}"
+        echo "📱 hacksaws2x4 deployed to: ${{ steps.get-url.outputs.DEPLOYMENT_URL }}"
         echo "🛡️ Security validation: PASSED"
         echo "✅ Health check: PASSED"
         echo "🧪 Functionality test: PASSED"

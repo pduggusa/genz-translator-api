@@ -1,5 +1,5 @@
 {
-  "name": "genz-translator-api",
+  "name": "hacksaws2x4",
   "version": "3.0.0",
   "description": "Advanced content extraction API with browser emulation, popup handling, and structured data output for price tracking and inventory monitoring",
   "main": "src/server.js",
