@@ -4,6 +4,48 @@
 // Cheerio removed - not used in this module
 
 /**
+ * Create simplified strain data for storage and trend tracking
+ * Returns exactly what the storage app needs
+ */
+function createStrainTrackingData(products, location, sourceUrl) {
+  const strains = products.map(product => {
+    const strain = {
+      location: location,
+      strain: product.strain || product.productName,
+      thc: parseFloat(product.thc) || null,
+      weights: [],
+      productUrl: product.productUrl || sourceUrl,
+      retrievedAt: new Date().toISOString()
+    };
+
+    // Add weight/price data if available
+    if (product.weight && product.price) {
+      const weight = product.weight;
+      const price = parseFloat(product.price.replace('$', ''));
+      const weightNum = parseFloat(weight.replace('g', ''));
+
+      strain.weights.push({
+        weight: weight,
+        price: price,
+        pricePerGram: parseFloat((price / weightNum).toFixed(2))
+      });
+    }
+
+    return strain;
+  });
+
+  return {
+    strains: strains,
+    summary: {
+      totalStrains: strains.length,
+      location: location,
+      extractedAt: new Date().toISOString(),
+      sourceUrl: sourceUrl
+    }
+  };
+}
+
+/**
  * Enhanced Cannabis Product Data Structure for Historical Tracking
  */
 function createCannabisDataStructure () {
@@ -133,7 +175,10 @@ function isCannabisContent (html, _$) {
     /\b(?:21|eighteen|18)\+?\s*(?:years?\s*old|or\s*older).*(?:cannabis|marijuana|dispensary)/i,
 
     // Cannabis business terms
-    /\b(?:medical\s*(?:marijuana|cannabis)|rec(?:reational)?|mmj|dispensary|budtender)\b/i
+    /\b(?:medical\s*(?:marijuana|cannabis)|rec(?:reational)?|mmj|dispensary|budtender)\b/i,
+
+    // Specific dispensary indicators
+    /\b(?:visitgreengoods|risecannabis|green\s*goods|lakeleafretail|lake\s*leaf|dutchie|sweetest\s*grass)\b/i
   ];
 
   return cannabisIndicators.some(pattern => pattern.test(html));
@@ -620,5 +665,6 @@ function convertToGrams (weightStr) {
 module.exports = {
   isCannabisContent,
   extractCannabisData,
-  createCannabisDataStructure
+  createCannabisDataStructure,
+  createStrainTrackingData
 };

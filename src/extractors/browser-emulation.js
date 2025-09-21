@@ -102,12 +102,23 @@ async function getBrowserInstance () {
 
 // Enhanced page setup with realistic browser behavior for Playwright
 async function setupPage (browser) {
-  // Create browser context with user agent
+  // Create browser context with realistic user agent and settings
   const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
     viewport: { width: 1920, height: 1080 },
     locale: 'en-US',
-    timezoneId: 'America/New_York'
+    timezoneId: 'America/New_York',
+    // Additional anti-detection measures
+    hasTouch: false,
+    isMobile: false,
+    colorScheme: 'light',
+    reducedMotion: 'no-preference',
+    // Simulate real browser permissions
+    permissions: ['geolocation'],
+    // Add realistic screen info
+    screen: { width: 1920, height: 1080 },
+    // Block some tracking
+    bypassCSP: true
   });
 
   const page = await context.newPage();
@@ -125,17 +136,29 @@ async function setupPage (browser) {
   // Set geolocation (US-based)
   await page.context().setGeolocation({ latitude: 40.7128, longitude: -74.0060 });
 
-  // Override webdriver detection
+  // Enhanced anti-detection script
   await page.addInitScript(() => {
-    // Remove webdriver property using secure method
-    Object.setPrototypeOf(navigator, null);
+    // Remove webdriver property completely
+    delete Object.getPrototypeOf(navigator).webdriver;
 
-    // Mock Firefox-specific objects
+    // Mock Firefox-specific objects and properties
     window.InstallTrigger = {};
 
-    // Mock plugins
+    // Mock realistic navigator properties
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => undefined
+    });
+
+    // Mock plugins with realistic Firefox plugins
     Object.defineProperty(navigator, 'plugins', {
-      get: () => [1, 2, 3, 4, 5]
+      get: () => ({
+        length: 5,
+        0: { name: 'PDF Viewer', filename: 'internal-pdf-viewer' },
+        1: { name: 'Chrome PDF Viewer', filename: 'internal-pdf-viewer' },
+        2: { name: 'Chromium PDF Viewer', filename: 'internal-pdf-viewer' },
+        3: { name: 'Microsoft Edge PDF Viewer', filename: 'internal-pdf-viewer' },
+        4: { name: 'WebKit built-in PDF', filename: 'internal-pdf-viewer' }
+      })
     });
 
     // Mock languages
@@ -143,10 +166,50 @@ async function setupPage (browser) {
       get: () => ['en-US', 'en']
     });
 
-    // Mock webdriver property
-    Object.defineProperty(navigator, 'webdriver', {
-      get: () => undefined
+    // Mock realistic hardware concurrency
+    Object.defineProperty(navigator, 'hardwareConcurrency', {
+      get: () => 8
     });
+
+    // Mock realistic device memory
+    Object.defineProperty(navigator, 'deviceMemory', {
+      get: () => 8
+    });
+
+    // Override permission query to appear more realistic
+    const originalQuery = window.navigator.permissions.query;
+    window.navigator.permissions.query = (parameters) => (
+      parameters.name === 'notifications' ?
+        Promise.resolve({ state: Notification.permission }) :
+        originalQuery(parameters)
+    );
+
+    // Mock realistic screen properties
+    Object.defineProperty(screen, 'availWidth', { get: () => 1920 });
+    Object.defineProperty(screen, 'availHeight', { get: () => 1040 });
+    Object.defineProperty(screen, 'width', { get: () => 1920 });
+    Object.defineProperty(screen, 'height', { get: () => 1080 });
+    Object.defineProperty(screen, 'colorDepth', { get: () => 24 });
+    Object.defineProperty(screen, 'pixelDepth', { get: () => 24 });
+
+    // Mock realistic timing for performance
+    if (window.performance && window.performance.now) {
+      const originalNow = window.performance.now;
+      let startTime = originalNow.call(window.performance);
+      window.performance.now = () => {
+        return originalNow.call(window.performance) - startTime + Math.random() * 0.1;
+      };
+    }
+
+    // Add some human-like mouse movement simulation
+    let mouseX = 0, mouseY = 0;
+    const updateMouse = () => {
+      mouseX += (Math.random() - 0.5) * 2;
+      mouseY += (Math.random() - 0.5) * 2;
+      mouseX = Math.max(0, Math.min(window.innerWidth, mouseX));
+      mouseY = Math.max(0, Math.min(window.innerHeight, mouseY));
+    };
+    setInterval(updateMouse, 100);
   });
 
   return page;
@@ -175,7 +238,14 @@ async function handlePopupsAndOverlays (page) {
           'input[type="radio"][value="Yes"]', 'input[type="radio"][value="yes"]',
           '.step-1-only button', '.gf_page button',
           'form button[type="submit"]', 'form input[type="submit"]',
-          '.gform_button', '.button'
+          '.gform_button', '.button',
+          // Lake Leaf specific selectors
+          '[class*="age-gate"] button', '[id*="age-gate"] button',
+          '[class*="verification"] button', '[id*="verification"] button',
+          'button:has-text("I am 21+"), button:has-text("I am over 21")',
+          'button:has-text("Verify Age"), button:has-text("Enter")',
+          '.modal button', '.popup button', '.overlay button',
+          '[data-testid*="age"] button', '[data-testid*="verify"] button'
         ],
         type: 'age-verification',
         keywords: ['18', '21', 'yes', 'enter', 'confirm', 'proceed', 'continue']
@@ -366,6 +436,108 @@ async function fetchPageWithBrowser (url, options = {}) {
     let popupsHandled = 0;
     if (handlePopups) {
       popupsHandled = await handlePopupsAndOverlays(page);
+    }
+
+    // Enhanced wait for specific cannabis sites
+    if (url.includes('risecannabis.com') && url.includes('medical-menu')) {
+      console.log('🌿 Detected Rise Cannabis menu page - waiting for product cards...');
+      try {
+        // Wait for product cards to appear with THC data
+        await page.waitForFunction(() => {
+          // Look for elements containing THC percentage data like "THC 27.9%"
+          const elements = document.querySelectorAll('*');
+          let thcCount = 0;
+          for (let el of elements) {
+            if (el.textContent && el.textContent.match(/THC\s+\d+(\.\d+)?%/)) {
+              thcCount++;
+            }
+          }
+          console.log(`Found ${thcCount} elements with THC data`);
+          return thcCount >= 10; // Wait for at least 10 product cards to load
+        }, { timeout: 30000 });
+
+        console.log('✅ Product cards with THC data loaded');
+
+        // Additional wait for any lazy loading
+        await page.waitForTimeout(3000);
+
+        // Scroll to trigger any lazy loading
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight / 2);
+        });
+        await page.waitForTimeout(2000);
+
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        await page.waitForTimeout(2000);
+
+        console.log('✅ Completed scroll and wait for lazy loading');
+
+      } catch (e) {
+        console.log('⚠️ Timeout waiting for product cards, proceeding with extraction');
+      }
+    }
+
+    // Enhanced handling for Lake Leaf Retail
+    if (url.includes('lakeleafretail.com')) {
+      console.log('🌿 Detected Lake Leaf Retail - using advanced anti-blocking measures...');
+      try {
+        // Wait longer for initial load
+        await page.waitForTimeout(5000);
+
+        // Handle potential age verification or location blocking
+        await page.evaluate(() => {
+          // Simulate user interaction patterns
+          document.dispatchEvent(new MouseEvent('mousemove', {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: Math.random() * window.innerWidth,
+            clientY: Math.random() * window.innerHeight
+          }));
+        });
+
+        // Wait for any additional popups to appear after interaction
+        await page.waitForTimeout(3000);
+
+        // Try to find and handle any blocking mechanisms
+        const blockingElements = await page.locator('body').innerHTML();
+        if (blockingElements.includes('verification') ||
+            blockingElements.includes('location') ||
+            blockingElements.includes('restricted') ||
+            blockingElements.includes('blocked')) {
+          console.log('🚫 Detected blocking mechanism, attempting bypass...');
+
+          // Try clicking anywhere to trigger potential overlays
+          await page.click('body', { force: true });
+          await page.waitForTimeout(2000);
+
+          // Look for product elements to confirm content loaded
+          await page.waitForFunction(() => {
+            const text = document.body.textContent.toLowerCase();
+            return text.includes('flower') || text.includes('thc') || text.includes('cannabis') || text.includes('strain');
+          }, { timeout: 15000 });
+        }
+
+        // Wait for product content to load
+        await page.waitForFunction(() => {
+          const elements = document.querySelectorAll('*');
+          let productCount = 0;
+          for (let el of elements) {
+            const text = el.textContent?.toLowerCase() || '';
+            if (text.includes('flower') || text.includes('strain') || text.match(/\$\d+/)) {
+              productCount++;
+            }
+          }
+          return productCount >= 5; // Wait for at least 5 product-related elements
+        }, { timeout: 20000 });
+
+        console.log('✅ Lake Leaf content loaded successfully');
+
+      } catch (e) {
+        console.log('⚠️ Lake Leaf special handling failed, proceeding with standard extraction');
+      }
     }
 
     // Wait for specific selector if provided

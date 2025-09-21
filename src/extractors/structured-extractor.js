@@ -234,7 +234,7 @@ function extractProductPricing ($, html) {
     discount: null
   };
 
-  // Price selectors in priority order
+  // Price selectors in priority order (enhanced for Rise Cannabis)
   const priceSelectors = [
     '[class*="current-price"] [class*="price"]',
     '[class*="sale-price"]',
@@ -243,7 +243,11 @@ function extractProductPricing ($, html) {
     '[data-testid*="price"]',
     '[class*="price"]:not([class*="original"]):not([class*="was"]):not([class*="old"])',
     '.price',
-    '#price'
+    '#price',
+    // Rise Cannabis specific price patterns
+    '[class*="cost"]',
+    '[class*="amount"]',
+    '[data-price]'
   ];
 
   const originalPriceSelectors = [
@@ -365,6 +369,379 @@ function extractProductHeaders ($) {
   return headers;
 }
 
+// Green Goods parser for copy-paste data
+function parseGreenGoodsData(pageText, location, sourceUrl) {
+  const products = [];
+
+  // Split by "Add to bag" or "Select weight" to separate products
+  const productBlocks = pageText.split(/(?:Add to bag|Select weight)/);
+
+  productBlocks.forEach((block, index) => {
+    if (index === 0) return; // Skip first empty block
+
+    const lines = block.trim().split('\n').map(line => line.trim()).filter(line => line);
+    if (lines.length < 6) return; // Need minimum lines for a valid product
+
+    // Parse the Green Goods format:
+    // Line 0: Strain name
+    // Line 1: Type (Indica/Sativa/Hybrid)
+    // Line 2: Strain name (repeat)
+    // Line 3: Brand/Grower
+    // Line 4: Product type (Flower, Ground Flower, etc)
+    // Line 5: Weight info (7G), (3.5G), (14G, 28G)
+    // Line 6: (blank)
+    // Line 7: THC X.XX% CBD X.XX%
+    // Line 8: $XX.XX/Xg
+
+    const strain = lines[0];
+    const cannabisType = lines[1];
+    const brand = lines[3];
+    const productType = lines[4];
+
+    // Find THC/CBD line
+    const thcCbdLine = lines.find(line => line.includes('THC') && line.includes('CBD'));
+    // Find price line
+    const priceLine = lines.find(line => line.includes('$') && line.includes('/'));
+
+    if (strain && thcCbdLine && priceLine) {
+      // Parse THC/CBD
+      const thcMatch = thcCbdLine.match(/THC\s+([\d.]+)%/);
+      const cbdMatch = thcCbdLine.match(/CBD\s+([\d.]+)%/);
+
+      // Parse price and weight
+      const priceMatch = priceLine.match(/\$([\d.]+)\/([\d.]+g)/);
+
+      if (thcMatch && priceMatch) {
+        const thc = parseFloat(thcMatch[1]);
+        const price = parseFloat(priceMatch[1]);
+        const weight = priceMatch[2];
+
+        const product = {
+          type: 'cannabis-flower',
+          cannabisType: cannabisType,
+          vendor: brand,
+          strain: strain,
+          productName: strain,
+          productType: productType,
+          thc: `${thc}%`,
+          cbd: cbdMatch ? `${parseFloat(cbdMatch[1])}%` : null,
+          weight: weight,
+          price: `$${price.toFixed(2)}`,
+          location: location,
+          sourceUrl: sourceUrl,
+          source: 'green-goods-multiline',
+          pricePerGram: (price / parseFloat(weight.replace('g', ''))).toFixed(2),
+          thcPerDollar: (thc / price).toFixed(3)
+        };
+
+        products.push(product);
+      }
+    }
+  });
+
+  return products;
+}
+
+// Lake Leaf parser for copy-paste data
+function parseLakeLeafData(pageText, location, sourceUrl) {
+  const products = [];
+
+  // Parse the Lake Leaf format from your paste data:
+  // Strain | 1/8oz Flower
+  // Brand
+  // Strain | 1/8oz Flower
+  // Type | THC XX.X%
+  // $XX.XX
+
+  const lines = pageText.split('\n').map(line => line.trim()).filter(line => line);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Look for strain lines that end with "| 1/8oz Flower"
+    if (line.includes('| 1/8oz Flower') && !line.includes('Campfire Cannabis')) {
+      const strain = line.replace('| 1/8oz Flower', '').trim();
+
+      // Next line should be brand (skip if it's "Campfire Cannabis")
+      if (i + 1 < lines.length && lines[i + 1] === 'Campfire Cannabis') {
+        const brand = lines[i + 1];
+
+        // Skip repeated strain line
+        if (i + 2 < lines.length && lines[i + 2].includes(strain)) {
+          // Type and THC line
+          if (i + 3 < lines.length) {
+            const typeThcLine = lines[i + 3];
+            const thcMatch = typeThcLine.match(/THC\s+([\d.]+)%/);
+            const typeMatch = typeThcLine.match(/^([^|]+)/);
+
+            // Price line
+            if (i + 4 < lines.length) {
+              const priceLine = lines[i + 4];
+              const priceMatch = priceLine.match(/\$([\d.]+)/);
+
+              if (thcMatch && priceMatch && typeMatch) {
+                const thc = parseFloat(thcMatch[1]);
+                const price = parseFloat(priceMatch[1]);
+                const cannabisType = typeMatch[1].trim();
+                const weight = '3.5g'; // 1/8oz = 3.5g
+
+                const product = {
+                  type: 'cannabis-flower',
+                  cannabisType: cannabisType,
+                  vendor: brand,
+                  strain: strain,
+                  productName: strain,
+                  productType: 'Flower',
+                  thc: `${thc}%`,
+                  cbd: null,
+                  weight: weight,
+                  price: `$${price.toFixed(2)}`,
+                  location: location,
+                  sourceUrl: sourceUrl,
+                  source: 'lake-leaf-multiline',
+                  pricePerGram: (price / 3.5).toFixed(2),
+                  thcPerDollar: (thc / price).toFixed(3)
+                };
+
+                products.push(product);
+
+                // Skip ahead to avoid double processing
+                i += 4;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return products;
+}
+
+// Dutchie parser for copy-paste data
+function parseDutchieData(pageText, location, sourceUrl) {
+  const products = [];
+
+  // Parse the Dutchie format:
+  // Brand | Product | - Strain | Type | THC%
+  // Type
+  // THC: XX.X%
+  // Weight
+  // $XX.XX
+
+  const lines = pageText.split('\n').map(line => line.trim()).filter(line => line);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Look for product lines with strain names and THC percentages
+    if (line.includes('|') && line.includes('%') && (line.includes('(H)') || line.includes('(S)') || line.includes('(I)'))) {
+      // Extract strain and THC from product line
+      let strain = '';
+      let titleThc = '';
+
+      // Parse different formats:
+      // "GOLD* Flower | - Cherry Slimeade (H) | 24.65%"
+      // "Platinum Tier - Cherry Pie OG (H)| 26.2%"
+
+      if (line.includes('GOLD* Flower |')) {
+        const match = line.match(/GOLD\* Flower \| - (.+?) \([HSI]\) \| ([\d.]+)%/);
+        if (match) {
+          strain = match[1].trim();
+          titleThc = match[2];
+        }
+      } else if (line.includes('Platinum Tier -')) {
+        const match = line.match(/Platinum Tier - (.+?) \([HSI]\/?\w?\)\| ([\d.]+)%/);
+        if (match) {
+          strain = match[1].trim();
+          titleThc = match[2];
+        }
+      } else if (line.includes('Small Buds |')) {
+        const match = line.match(/Small Buds \| - (.+?) \([HSI]\) \| ([\d.]+)%/);
+        if (match) {
+          strain = match[1].trim();
+          titleThc = match[2];
+        }
+      } else if (line.includes('Exotic Bloom |')) {
+        const match = line.match(/Exotic Bloom \| .+ \| - (.+?) \| \([SI]\) ([\d.]+)%/);
+        if (match) {
+          strain = match[1].trim();
+          titleThc = match[2];
+        }
+      }
+
+      if (strain) {
+        // Next lines should be Type, THC, weights and prices
+        let cannabisType = '';
+        let thc = '';
+        const weights = [];
+
+        // Look ahead for type and THC
+        for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
+          const nextLine = lines[j];
+
+          // Cannabis type line
+          if (['Hybrid', 'Sativa', 'Indica'].includes(nextLine)) {
+            cannabisType = nextLine;
+          }
+
+          // THC line
+          if (nextLine.startsWith('THC:')) {
+            const thcMatch = nextLine.match(/THC:\s*([\d.]+)%/);
+            if (thcMatch) {
+              thc = thcMatch[1];
+            }
+          }
+
+          // Weight and price lines
+          if (nextLine.match(/^\d+g?$/) && j + 1 < lines.length) {
+            const weight = nextLine;
+            const priceLine = lines[j + 1];
+            const priceMatch = priceLine.match(/\$([\d.]+)/);
+
+            if (priceMatch) {
+              weights.push({
+                weight: weight === '1g' ? '1g' : weight === '3.5g' ? '3.5g' : weight === '7g' ? '7g' : weight === '14g' ? '14g' : weight === '28g' ? '28g' : weight,
+                price: parseFloat(priceMatch[1])
+              });
+            }
+          }
+
+          // Stop if we hit another product line
+          if (nextLine.includes('|') && nextLine.includes('%') && nextLine !== line) {
+            break;
+          }
+        }
+
+        // Use title THC if we didn't find THC in content
+        if (!thc && titleThc) {
+          thc = titleThc;
+        }
+
+        // Determine brand/tier
+        let brand = 'Sweetest Grass';
+        let tier = '';
+        if (line.includes('GOLD* Flower')) {
+          tier = 'Gold';
+        } else if (line.includes('Platinum Tier')) {
+          tier = 'Platinum';
+        } else if (line.includes('Small Buds')) {
+          tier = 'Small Buds';
+        } else if (line.includes('Exotic Bloom')) {
+          brand = 'Exotic Bloom';
+        }
+
+        // Create products for each weight
+        if (weights.length > 0 && thc) {
+          weights.forEach(weightInfo => {
+            const weightNum = parseFloat(weightInfo.weight.replace('g', ''));
+            const product = {
+              type: 'cannabis-flower',
+              cannabisType: cannabisType,
+              vendor: brand,
+              tier: tier,
+              strain: strain,
+              productName: strain,
+              productType: 'Flower',
+              thc: `${thc}%`,
+              cbd: null,
+              weight: weightInfo.weight,
+              price: `$${weightInfo.price.toFixed(2)}`,
+              location: location,
+              sourceUrl: sourceUrl,
+              source: 'dutchie-multiline',
+              pricePerGram: (weightInfo.price / weightNum).toFixed(2),
+              thcPerDollar: (parseFloat(thc) / weightInfo.price).toFixed(3)
+            };
+
+            products.push(product);
+          });
+        }
+      }
+    }
+  }
+
+  return products;
+}
+
+// Parse multi-line product cards from Rise Cannabis copy-paste format
+function parseMultiLineProductCards(pageText, riseLocation, url) {
+  const products = [];
+  const lines = pageText.split('\n').map(line => line.trim());
+
+  console.log(`📋 Processing ${lines.length} lines for product cards`);
+
+  for (let i = 0; i < lines.length - 9; i++) {
+    // Look for the pattern starting with cannabis type (Hybrid, Indica, Sativa)
+    const cannabisType = lines[i];
+    if (!['Hybrid', 'Indica', 'Sativa'].includes(cannabisType)) continue;
+
+    console.log(`🔍 Found cannabis type "${cannabisType}" at line ${i}`);
+
+    const vendor = lines[i + 1];
+    const strain = lines[i + 2];
+    const productType = lines[i + 3];
+    const thcCbdLine = lines[i + 4];
+    const rating = lines[i + 5];
+
+    // Skip blank line and find reviews line
+    let reviewsLineIndex = i + 6;
+    while (reviewsLineIndex < lines.length && lines[reviewsLineIndex].trim() === '') {
+      reviewsLineIndex++;
+    }
+
+    const reviewsLine = lines[reviewsLineIndex];
+    const weight = lines[reviewsLineIndex + 1];
+    const price = lines[reviewsLineIndex + 2];
+
+    if (!vendor || !strain || !productType || !thcCbdLine || !rating || !reviewsLine || !weight || !price) {
+      console.log(`❌ Missing data at line ${i}`);
+      continue;
+    }
+
+    // Validate the pattern
+    const thcCbdMatch = thcCbdLine.match(/THC\s+(\d+(?:\.\d+)?)%\s+CBD\s+(\d+(?:\.\d+)?)%/);
+    const weightMatch = weight.match(/(\d+(?:\.\d+)?)g/);
+    const priceMatch = price.match(/\$(\d+(?:\.\d+)?)/);
+    const reviewsMatch = reviewsLine.match(/(\d+)\s+reviews?/);
+
+    if (thcCbdMatch && weightMatch && priceMatch) {
+      const [, thcPercent, cbdPercent] = thcCbdMatch;
+      const [, weightValue] = weightMatch;
+      const [, priceValue] = priceMatch;
+      const reviewCount = reviewsMatch ? reviewsMatch[1] : null;
+
+      const product = {
+        type: 'cannabis-flower',
+        cannabisType: cannabisType,
+        vendor: vendor,
+        productName: strain,
+        productType: productType,
+        thc: `${thcPercent}%`,
+        cbd: `${cbdPercent}%`,
+        weight: `${weightValue}g`,
+        price: `$${priceValue}`,
+        rating: rating,
+        reviewCount: reviewCount,
+        riseLocation: riseLocation,
+        sourceUrl: url,
+        source: 'rise-cannabis-multiline',
+        pricePerGram: (parseFloat(priceValue) / parseFloat(weightValue)).toFixed(2),
+        thcPerDollar: (parseFloat(thcPercent) / parseFloat(priceValue)).toFixed(3),
+        rawText: lines.slice(i, reviewsLineIndex + 3).join(' | ')
+      };
+
+      products.push(product);
+      console.log(`✅ Parsed: ${vendor} ${strain} - ${weight} - ${price} - ${thcPercent}% THC`);
+
+      // Skip ahead to avoid overlapping matches
+      i = reviewsLineIndex + 2;
+    }
+  }
+
+  return products;
+}
+
 // Extract product content (description, features, specs)
 function extractProductContent ($, url) {
   const content = {
@@ -421,6 +798,22 @@ function extractProductContent ($, url) {
     const locationMatch = url.match(/dispensaries\/[^\/]+\/([^\/]+)/);
     const riseLocation = locationMatch ? locationMatch[1].replace(/-/g, ' ').toUpperCase() : 'UNKNOWN LOCATION';
 
+    // Multi-line product card extraction for Rise Cannabis copy-paste format
+    console.log('🔍 Searching for multi-line product cards with complete data...');
+    const pageText = $('body').text();
+    console.log('📄 Page text length:', pageText.length);
+
+    // Parse multi-line product cards
+    const products = parseMultiLineProductCards(pageText, riseLocation, url);
+
+    console.log(`🌿 Found ${products.length} complete product cards with pricing data`);
+
+    // Add products to features
+    products.forEach(product => {
+      content.features.push(JSON.stringify(product));
+      console.log(`🌿 ${product.vendor} ${product.productName} (${product.thc}) - ${product.weight} - ${product.price}`);
+    });
+
     // First, collect ALL product URLs on the page - try multiple selectors
     const productUrls = new Set();
 
@@ -443,16 +836,53 @@ function extractProductContent ($, url) {
       });
     }
 
-    // Also search for any URLs in the page content/text that look like product URLs
+    // Comprehensive search for product URLs in ALL page content
     const pageHtml = $.html();
-    const urlRegex = /\/dispensaries\/[^\/]+\/[^\/]+\/\d+\/medical-menu\/product\/\d+\/[^\/\s"']+/g;
-    const matches = pageHtml.match(urlRegex);
-    if (matches) {
-      matches.forEach(match => {
-        const fullUrl = `https://risecannabis.com${match}`;
-        productUrls.add(fullUrl);
-      });
+    console.log('🔍 Searching page HTML for product URLs...');
+
+    // Multiple regex patterns to catch product URLs in different formats
+    const urlPatterns = [
+      // Full URLs
+      /https:\/\/risecannabis\.com\/dispensaries\/[^\/]+\/[^\/]+\/\d+\/medical-menu\/product\/\d+\/[^\/\s"'<>]+/g,
+      // Relative URLs
+      /\/dispensaries\/[^\/]+\/[^\/]+\/\d+\/medical-menu\/product\/\d+\/[^\/\s"'<>]+/g,
+      // Just the product part
+      /\/product\/\d+\/[a-zA-Z0-9\-]+/g
+    ];
+
+    for (const pattern of urlPatterns) {
+      const matches = pageHtml.match(pattern);
+      if (matches) {
+        console.log(`📋 Found ${matches.length} URLs with pattern: ${pattern.toString().slice(0, 50)}...`);
+        matches.forEach(match => {
+          let fullUrl;
+          if (match.startsWith('http')) {
+            fullUrl = match;
+          } else if (match.startsWith('/dispensaries/')) {
+            fullUrl = `https://risecannabis.com${match}`;
+          } else if (match.startsWith('/product/')) {
+            fullUrl = `https://risecannabis.com/dispensaries/minnesota/new-hope/5268/medical-menu${match}`;
+          }
+          if (fullUrl && fullUrl.includes('/product/')) {
+            productUrls.add(fullUrl);
+          }
+        });
+      }
     }
+
+    // Also search for any data attributes that might contain URLs
+    $('[data-href], [data-url], [data-link], [data-to], [data-route]').each((i, el) => {
+      const $el = $(el);
+      ['data-href', 'data-url', 'data-link', 'data-to', 'data-route'].forEach(attr => {
+        const value = $el.attr(attr);
+        if (value && value.includes('product')) {
+          const fullUrl = value.startsWith('http') ? value : `https://risecannabis.com${value}`;
+          if (fullUrl.includes('/product/')) {
+            productUrls.add(fullUrl);
+          }
+        }
+      });
+    });
 
     console.log(`🔗 Found ${productUrls.size} product URLs on page`);
 
@@ -651,6 +1081,7 @@ function extractProductContent ($, url) {
           weight: weightMatch ? weightMatch[1] : null,
           price: priceMatch ? `$${priceMatch[1]}` : null,
           thc: thcMatch ? `${thcMatch[1]}%` : (thcFromDetails ? `${thcFromDetails[1]}%` : null),
+          cbd: null, // Not typically found in fallback extraction
           terpenes: terpenes || terpFromDetails?.[1] || null,
           rawText: productText,
           detailsText: details || null,
@@ -664,6 +1095,60 @@ function extractProductContent ($, url) {
     });
 
     console.log(`🌿 Extracted ${content.features.length} detailed cannabis products from ${riseLocation}`);
+    }
+  } else if (url && url.includes('visitgreengoods.com')) {
+    console.log('🌿 Extracting Green Goods products...');
+
+    // Extract location from URL or page title
+    const locationMatch = url.match(/\/([a-z-]+)-mn-menu/);
+    const location = locationMatch ?
+      `Green Goods ${locationMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}, Minnesota` :
+      'Green Goods Minnesota';
+
+    console.log('🔍 Searching for Green Goods product data...');
+    const pageText = $('body').text();
+    console.log('📄 Page text length:', pageText.length);
+
+    // Parse Green Goods format
+    const products = parseGreenGoodsData(pageText, location, url);
+
+    console.log(`🌿 Found ${products.length} Green Goods products`);
+
+    // Add products to features
+    products.forEach(product => {
+      content.features.push(JSON.stringify(product));
+      console.log(`🌿 ${product.vendor} ${product.productName} (${product.thc}) - ${product.weight} - ${product.price}`);
+    });
+  } else if (url && url.includes('lakeleafretail.com')) {
+    console.log('🌿 Extracting Lake Leaf Retail products...');
+
+    const location = 'Lake Leaf Dispensary, Mille Lacs';
+    const pageText = $('body').text();
+
+    // Parse Lake Leaf format from your paste data
+    const products = parseLakeLeafData(pageText, location, url);
+    console.log(`🌿 Found ${products.length} Lake Leaf products`);
+
+    // Add products to features
+    products.forEach(product => {
+      content.features.push(JSON.stringify(product));
+      console.log(`🌿 ${product.vendor} ${product.productName} (${product.thc}) - ${product.weight} - ${product.price}`);
+    });
+  } else if (url && (url.includes('dutchie.com') || url.includes('sweetest-grass'))) {
+    console.log('🌿 Extracting Dutchie/Sweetest Grass products...');
+
+    const location = 'Sweetest Grass Dispensary';
+    const pageText = $('body').text();
+
+    // Parse Dutchie format from your paste data
+    const products = parseDutchieData(pageText, location, url);
+    console.log(`🌿 Found ${products.length} Dutchie products`);
+
+    // Add products to features
+    products.forEach(product => {
+      content.features.push(JSON.stringify(product));
+      console.log(`🌿 ${product.vendor} ${product.productName} (${product.thc}) - ${product.weight} - ${product.price}`);
+    });
   } else {
     // Regular feature extraction for non-cannabis sites
     $('[class*="feature"], [class*="highlight"], .features ul, .highlights ul').find('li').each((i, el) => {
