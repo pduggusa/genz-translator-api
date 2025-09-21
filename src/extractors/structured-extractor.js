@@ -121,7 +121,9 @@ function detectContentType (html, $) {
   ];
 
   // Check in priority order
-  if (productIndicators.some(pattern => pattern.test(html))) {
+  if (productIndicators.some(pattern =>
+    typeof pattern === 'function' ? pattern() : pattern.test(html)
+  )) {
     return 'product';
   }
   if (listingIndicators.some(pattern => pattern.test(html)) ||
