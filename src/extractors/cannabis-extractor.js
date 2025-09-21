@@ -10,7 +10,7 @@
 function createStrainTrackingData(products, location, sourceUrl) {
   const strains = products.map(product => {
     const strain = {
-      location: location,
+      location,
       strain: product.strain || product.productName,
       thc: parseFloat(product.thc) || null,
       weights: [],
@@ -25,8 +25,8 @@ function createStrainTrackingData(products, location, sourceUrl) {
       const weightNum = parseFloat(weight.replace('g', ''));
 
       strain.weights.push({
-        weight: weight,
-        price: price,
+        weight,
+        price,
         pricePerGram: parseFloat((price / weightNum).toFixed(2))
       });
     }
@@ -35,12 +35,12 @@ function createStrainTrackingData(products, location, sourceUrl) {
   });
 
   return {
-    strains: strains,
+    strains,
     summary: {
       totalStrains: strains.length,
-      location: location,
+      location,
       extractedAt: new Date().toISOString(),
-      sourceUrl: sourceUrl
+      sourceUrl
     }
   };
 }

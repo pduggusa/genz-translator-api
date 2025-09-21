@@ -179,23 +179,23 @@ async function setupPage (browser) {
     // Override permission query to appear more realistic
     const originalQuery = window.navigator.permissions.query;
     window.navigator.permissions.query = (parameters) => (
-      parameters.name === 'notifications' ?
-        Promise.resolve({ state: Notification.permission }) :
-        originalQuery(parameters)
+      parameters.name === 'notifications'
+        ? Promise.resolve({ state: Notification.permission })
+        : originalQuery(parameters)
     );
 
     // Mock realistic screen properties
-    Object.defineProperty(screen, 'availWidth', { get: () => 1920 });
-    Object.defineProperty(screen, 'availHeight', { get: () => 1040 });
-    Object.defineProperty(screen, 'width', { get: () => 1920 });
-    Object.defineProperty(screen, 'height', { get: () => 1080 });
-    Object.defineProperty(screen, 'colorDepth', { get: () => 24 });
-    Object.defineProperty(screen, 'pixelDepth', { get: () => 24 });
+    Object.defineProperty(window.screen, 'availWidth', { get: () => 1920 });
+    Object.defineProperty(window.screen, 'availHeight', { get: () => 1040 });
+    Object.defineProperty(window.screen, 'width', { get: () => 1920 });
+    Object.defineProperty(window.screen, 'height', { get: () => 1080 });
+    Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
+    Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
 
     // Mock realistic timing for performance
     if (window.performance && window.performance.now) {
       const originalNow = window.performance.now;
-      let startTime = originalNow.call(window.performance);
+      const startTime = originalNow.call(window.performance);
       window.performance.now = () => {
         return originalNow.call(window.performance) - startTime + Math.random() * 0.1;
       };

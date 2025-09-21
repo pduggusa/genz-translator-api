@@ -423,17 +423,17 @@ function parseGreenGoodsData(pageText, location, sourceUrl) {
 
         const product = {
           type: 'cannabis-flower',
-          cannabisType: cannabisType,
+          cannabisType,
           vendor: brand,
-          strain: strain,
+          strain,
           productName: strain,
-          productType: productType,
+          productType,
           thc: `${thc}%`,
           cbd: cbdMatch ? `${parseFloat(cbdMatch[1])}%` : null,
-          weight: weight,
+          weight,
           price: `$${price.toFixed(2)}`,
-          location: location,
-          sourceUrl: sourceUrl,
+          location,
+          sourceUrl,
           source: 'green-goods-multiline',
           pricePerGram: (price / parseFloat(weight.replace('g', ''))).toFixed(2),
           thcPerDollar: (thc / price).toFixed(3)
