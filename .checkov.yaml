@@ -1,0 +1,18 @@
+# Checkov configuration for security scanning
+# Exclude false positives and configure scanning preferences
+
+quiet: false
+compact: false
+framework:
+  - secrets
+
+# Skip specific checks that are false positives
+skip-check:
+  - CKV_SECRET_6  # Base64 High Entropy String - false positive on ACR password reference
+
+# Skip directories that don't need security scanning
+skip-path:
+  - node_modules
+  - .git
+  - dist
+  - build
