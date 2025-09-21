@@ -207,7 +207,9 @@ jobs:
       run: |
         echo "🚀 Deploying to Azure Container Apps..."
 
-        REVISION_SUFFIX="v${{ env.VERSION }}-$(date +%s)"
+        # Create revision suffix without dots (Azure requirement)
+        VERSION_CLEAN=$(echo "${{ env.VERSION }}" | tr '.' '-')
+        REVISION_SUFFIX="v${VERSION_CLEAN}-$(date +%s)"
 
         # Create or update container app
         az containerapp create \
