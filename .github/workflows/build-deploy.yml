@@ -175,7 +175,7 @@ jobs:
     - name: 🔍 Container Security Scan
       run: |
         echo "🔍 Running container security validation..."
-        az acr check-health --name ${{ env.REGISTRY_NAME }}
+        az acr check-health --name ${{ env.REGISTRY_NAME }} --yes
         echo "✅ Container security validation passed"
 
   # ============================================
