@@ -188,7 +188,6 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.security-and-test.outputs.security-passed == 'true' &&
       needs.build-and-push.result == 'success'
-    environment: production
     permissions:
       id-token: write
       contents: read
