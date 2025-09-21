@@ -38,3 +38,7 @@ build/
 sbom.json
 sbom.xml
 *.sbom
+
+# Local database files (never sync to GitHub)
+*.local
+.extraction-sites-database.local

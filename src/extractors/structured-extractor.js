@@ -115,9 +115,7 @@ function detectContentType (html, $) {
   // Listing/catalog indicators
   const listingIndicators = [
     /"@type":\s*"(?:ItemList|CollectionPage)"/i,
-    /class=["'][^"']*(?:product-list|item-list|catalog|grid)[^"']*["']/i,
-    // Multiple product cards
-    $('[class*="product-card"], [class*="item-card"], [class*="product-tile"]').length > 2
+    /class=["'][^"']*(?:product-list|item-list|catalog|grid)[^"']*["']/i
   ];
 
   // Check in priority order
@@ -126,8 +124,13 @@ function detectContentType (html, $) {
   )) {
     return 'product';
   }
+
+  // Check for multiple product cards (listing indicators)
+  const productCardCount = $('[class*="product-card"], [class*="item-card"], [class*="product-tile"]').length;
+  const itemCount = $('[class*="product"], [class*="item"]').length;
+
   if (listingIndicators.some(pattern => pattern.test(html)) ||
-        $('[class*="product"], [class*="item"]').length > 5) {
+      productCardCount > 2 || itemCount > 5) {
     return 'listing';
   }
   if (articleIndicators.some(pattern => pattern.test(html))) {
