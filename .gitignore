@@ -49,3 +49,4 @@ claude-*.md
 *.claude-local
 development-notes.md
 session-*.md
+.claude-backups/
