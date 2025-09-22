@@ -13,6 +13,9 @@ const { PersistentCannabisTracker } = require('./database/persistent-tracker');
 // Import accessibility routes
 const accessibilityRoutes = require('./routes/accessibility');
 
+// Import patent research routes
+const patentResearchRoutes = require('./routes/patent-research');
+
 // Initialize persistent tracker with fallback to temp directory
 const dataDir = process.env.DATA_DIR || (process.env.NODE_ENV === 'production' ? '/tmp/data' : './data');
 const persistentTracker = new PersistentCannabisTracker(dataDir);
@@ -143,6 +146,9 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Mount accessibility routes
 app.use('/api/accessibility', accessibilityRoutes);
+
+// Mount patent research routes
+app.use('/api/patent-research', patentResearchRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
