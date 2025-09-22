@@ -10,6 +10,9 @@ const { extractStructuredContent } = require('./extractors/structured-extractor'
 const { cannabisTracker } = require('./database/cannabis-tracker');
 const { PersistentCannabisTracker } = require('./database/persistent-tracker');
 
+// Import accessibility routes
+const accessibilityRoutes = require('./routes/accessibility');
+
 // Initialize persistent tracker with fallback to temp directory
 const dataDir = process.env.DATA_DIR || (process.env.NODE_ENV === 'production' ? '/tmp/data' : './data');
 const persistentTracker = new PersistentCannabisTracker(dataDir);
@@ -137,6 +140,9 @@ app.use('/api/fetch-url', browserLimiter);
 // Body parser
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// Mount accessibility routes
+app.use('/api/accessibility', accessibilityRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));

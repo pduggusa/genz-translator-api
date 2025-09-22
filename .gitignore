@@ -50,3 +50,12 @@ claude-*.md
 development-notes.md
 session-*.md
 .claude-backups/
+
+# Crown Jewels - Maximum Security (NEVER COMMIT)
+crown-jewels/
+*.crown-jewels
+investor-docs/
+patent-docs/
+confidential-*.md
+strategic-*.md
+valuation-*.md
