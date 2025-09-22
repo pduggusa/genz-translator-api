@@ -14,7 +14,7 @@ env:
   IMAGE_NAME: hacksaws2x4
   RESOURCE_GROUP: dugganusa-RG
   CONTAINER_APP_NAME: hacksaws2x4
-  CONTAINER_APP_ENVIRONMENT: hacksaws2x4-env
+  CONTAINER_APP_ENVIRONMENT: genz-translator-env
   NODE_VERSION: '20.x'
 
 jobs:
@@ -211,12 +211,13 @@ jobs:
         VERSION_CLEAN=$(echo "${{ env.VERSION }}" | tr '.' '-')
         REVISION_SUFFIX="v${VERSION_CLEAN}-$(date +%s)"
 
-        # Create or update container app
+        # Create or update container app with ACR authentication
         az containerapp create \
           --name ${{ env.CONTAINER_APP_NAME }} \
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --environment ${{ env.CONTAINER_APP_ENVIRONMENT }} \
           --image ${{ needs.build-and-push.outputs.image-tag }} \
+          --registry-server ${{ env.REGISTRY_LOGIN_SERVER }} \
           --target-port 3000 \
           --ingress external \
           --min-replicas 1 \
