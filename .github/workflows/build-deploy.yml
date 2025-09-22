@@ -218,6 +218,8 @@ jobs:
           --environment ${{ env.CONTAINER_APP_ENVIRONMENT }} \
           --image ${{ needs.build-and-push.outputs.image-tag }} \
           --registry-server ${{ env.REGISTRY_LOGIN_SERVER }} \
+          --registry-username ${{ secrets.AZURE_REGISTRY_USERNAME }} \
+          --registry-password ${{ secrets.AZURE_REGISTRY_PASSWORD }} \
           --target-port 3000 \
           --ingress external \
           --min-replicas 1 \
