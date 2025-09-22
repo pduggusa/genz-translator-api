@@ -42,3 +42,10 @@ sbom.xml
 # Local database files (never sync to GitHub)
 *.local
 .extraction-sites-database.local
+
+# Claude development continuity (local only)
+CLAUDE.md
+claude-*.md
+*.claude-local
+development-notes.md
+session-*.md
