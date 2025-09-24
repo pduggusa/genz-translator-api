@@ -105,8 +105,8 @@ monitoring:
 # Incident response
 incident_response:
   security_contacts:
-    - security@dugganusa.com
-    - patrick@dugganusa.com
+    - security@example.com
+    - admin@example.com
 
   escalation_matrix:
     critical: "immediate"

@@ -9,12 +9,12 @@ on:
 
 env:
   VERSION: "3.0.0"
-  REGISTRY_NAME: genztranslatoracr
-  REGISTRY_LOGIN_SERVER: genztranslatoracr.azurecr.io
-  IMAGE_NAME: hacksaws2x4
-  RESOURCE_GROUP: dugganusa-RG
-  CONTAINER_APP_NAME: hacksaws2x4
-  CONTAINER_APP_ENVIRONMENT: genz-translator-env
+  REGISTRY_NAME: student-registry
+  REGISTRY_LOGIN_SERVER: student-registry.azurecr.io
+  IMAGE_NAME: vibe-coding-academy
+  RESOURCE_GROUP: student-resource-group
+  CONTAINER_APP_NAME: vibe-coding-academy
+  CONTAINER_APP_ENVIRONMENT: student-environment
   NODE_VERSION: '20.x'
 
 jobs:
