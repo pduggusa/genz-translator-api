@@ -11,9 +11,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-REGISTRY_NAME="${REGISTRY_NAME:-genztranslatoracrcentralus}"
-REGISTRY_LOGIN_SERVER="${REGISTRY_LOGIN_SERVER:-genztranslatoracrcentralus.azurecr.io}"
+# Configuration - Students replace these with their own values
+REGISTRY_NAME="${REGISTRY_NAME:-student-registry}"
+REGISTRY_LOGIN_SERVER="${REGISTRY_LOGIN_SERVER:-student-registry.azurecr.io}"
 IMAGE_NAME="${IMAGE_NAME:-vibe-coding-academy}"
 DOCKERFILE="${DOCKERFILE:-Dockerfile.optimized}"
 PLATFORM="${PLATFORM:-linux/amd64}"
