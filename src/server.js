@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const path = require('path');
+const { platform2x4 } = require('./platform/2x4-integration');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -117,6 +118,9 @@ const requestStats = {
 app.get('/health', async (req, res) => {
   const memoryUsage = process.memoryUsage();
 
+  // Get 2x4 platform status
+  const platform2x4Status = await platform2x4.healthCheck();
+
   const healthCheck = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -133,17 +137,67 @@ app.get('/health', async (req, res) => {
       securityScanning: true,
       performanceMonitoring: true,
       careerTools: true,
-      azureOptimized: IS_AZURE
+      azureOptimized: IS_AZURE,
+      studentTracking: platform2x4Status.status !== 'disabled'
     },
     eliteMetrics: {
       deploymentFrequency: 'Multiple per day',
       leadTime: '< 1 hour',
       recoveryTime: '< 1 hour',
       failureRate: '< 5%'
-    }
+    },
+    platform2x4: platform2x4Status
   };
 
+  // Track successful health check (first API call for many students)
+  if (req.headers['user-agent'] && !req.headers['user-agent'].includes('curl')) {
+    await platform2x4.trackFirstApiSuccess('/health');
+  }
+
   res.json(healthCheck);
+});
+
+// 2x4 Platform Integration Test Endpoint
+app.get('/api/platform/test', async (req, res) => {
+  try {
+    // Test all tracking functions
+    const results = {
+      timestamp: new Date().toISOString(),
+      tests: {}
+    };
+
+    // Test environment setup tracking
+    results.tests.environmentSetup = await platform2x4.trackEnvironmentSetup(1000);
+
+    // Test API success tracking
+    results.tests.apiSuccess = await platform2x4.trackFirstApiSuccess('/api/platform/test');
+
+    // Test learning milestone tracking
+    results.tests.learningMilestone = await platform2x4.trackLearningMilestone('platform_test_complete', {
+      test_run: true,
+      endpoint: '/api/platform/test'
+    });
+
+    // Test health check
+    results.tests.healthCheck = await platform2x4.healthCheck();
+
+    res.json({
+      status: 'success',
+      message: '2x4 Platform integration test complete',
+      oauth_configured: !!process.env.PLATFORM_2X4_OAUTH_KEY,
+      tracking_enabled: process.env.STUDENT_TRACKING_ENABLED === 'true',
+      results
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Platform integration test failed',
+      error: error.message,
+      oauth_configured: !!process.env.PLATFORM_2X4_OAUTH_KEY,
+      tracking_enabled: process.env.STUDENT_TRACKING_ENABLED === 'true'
+    });
+  }
 });
 
 // Landing page
@@ -177,6 +231,11 @@ app.get('/api', (req, res) => {
       'GET /api/learning/progress': 'Track your development',
       'GET /api/learning/skills': 'Assess your capabilities',
       'GET /api/learning/projects': 'Discover project ideas'
+    },
+
+    platformEndpoints: {
+      'GET /health': 'Health check with 2x4 platform status',
+      'GET /api/platform/test': 'Test 2x4 platform integration'
     },
 
     securityEndpoints: {
@@ -215,8 +274,14 @@ app.get('/api', (req, res) => {
 });
 
 // Learning journey endpoints
-app.get('/api/learning/start', (req, res) => {
+app.get('/api/learning/start', async (req, res) => {
   requestStats.learningRequests++;
+
+  // Track learning milestone
+  await platform2x4.trackLearningMilestone('journey_started', {
+    user_agent: req.headers['user-agent'],
+    referrer: req.headers['referer']
+  });
 
   res.json({
     welcome: 'Welcome to Vibe Coding Academy!',
@@ -508,6 +573,15 @@ app.use((err, req, res, next) => {
   console.error('❌ Error:', err);
   requestStats.failed++;
 
+  // Handle JSON parsing errors with 400 status
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      error: 'Invalid JSON format',
+      status: 'bad_request',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   res.status(500).json({
     success: false,
     error: 'Internal server error',
@@ -551,7 +625,9 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Start server
 if (!process.env.NO_SERVER_START) {
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
+    const startTime = Date.now();
+
     console.log(`🚀 Vibe Coding Academy API running on port ${PORT}`);
     console.log(`🌐 Environment: ${IS_AZURE ? 'Azure App Service' : 'Local Development'}`);
     console.log(`💊 Health Check: ${IS_AZURE ? 'https://' + process.env.WEBSITE_SITE_NAME + '.azurewebsites.net' : 'http://localhost:' + PORT}/health`);
@@ -568,6 +644,21 @@ if (!process.env.NO_SERVER_START) {
     console.log('  ✅ Security: Zero critical vulnerabilities');
     console.log('  ✅ Performance: Sub-second response times');
     console.log('  ✅ Deployment: Azure-optimized and production-ready');
+
+    // Track successful environment setup
+    try {
+      await platform2x4.trackEnvironmentSetup(Date.now() - startTime);
+
+      if (IS_AZURE) {
+        await platform2x4.trackDeploymentSuccess('Azure App Service');
+      } else {
+        await platform2x4.trackDeploymentSuccess('Local Development');
+      }
+
+      console.log('📊 Student progress tracked via 2x4 platform');
+    } catch (error) {
+      console.log('⚠️ Student tracking unavailable (check OAuth configuration)');
+    }
   });
 }
 

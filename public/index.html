@@ -3,1185 +3,539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hacksaws2x4 - Content Extraction API</title>
+    <title>🎓 Vibe Coding Academy - From Browser User to Elite Developer</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0; padding: 20px; line-height: 1.6;
+            margin: 0; padding: 0; line-height: 1.6;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
+            min-height: 100vh; color: #333;
         }
         .container {
-            max-width: 1200px; margin: 0 auto;
-            background: white;
-            border-radius: 12px;
+            max-width: 1200px; margin: 0 auto; padding: 20px;
+            background: white; border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            margin-top: 20px; margin-bottom: 20px;
         }
         .header {
+            text-align: center; padding: 40px 20px;
             background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 30px;
-            text-align: center;
+            color: white; border-radius: 8px; margin-bottom: 30px;
         }
         .header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            font-weight: 700;
+            margin: 0; font-size: 3rem; font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-            font-size: 1.1rem;
+            margin: 15px 0 0 0; opacity: 0.95; font-size: 1.3rem;
         }
-        .content { padding: 30px; }
-
-        .health-status {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
+        .hero-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin: 30px 0;
         }
-        .health-healthy { background: #d4edda; border-left: 4px solid #28a745; }
-        .health-degraded { background: #fff3cd; border-left: 4px solid #ffc107; }
-        .health-error { background: #f8d7da; border-left: 4px solid #dc3545; }
-
-        .health-details {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-left: 25px;
+        .stat-card {
+            background: rgba(255,255,255,0.1); padding: 20px;
+            border-radius: 8px; text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem; font-weight: 700;
+            margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .stat-label {
+            font-size: 0.9rem; opacity: 0.9;
         }
 
-        .api-form {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 20px 0;
+        .journey-section {
+            padding: 30px; text-align: center;
         }
-        .form-group {
-            margin-bottom: 20px;
+        .journey-title {
+            font-size: 2.5rem; margin-bottom: 20px;
+            color: #667eea; font-weight: 700;
         }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
+        .journey-steps {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px; margin: 30px 0;
         }
-        input[type="url"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        input[type="url"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin: 15px 0;
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
+        .step-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px; border-radius: 12px;
+            border-left: 5px solid #667eea;
             transition: transform 0.2s, box-shadow 0.2s;
-            width: 100%;
         }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
         }
-        button:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .step-number {
+            font-size: 2rem; font-weight: 700;
+            color: #667eea; margin-bottom: 10px;
         }
-
-        .progress-container {
-            display: none;
-            margin: 20px 0;
+        .step-title {
+            font-size: 1.3rem; font-weight: 600;
+            margin-bottom: 15px; color: #333;
         }
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
+        .step-description {
+            color: #666; margin-bottom: 15px;
         }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .progress-text {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: 500;
-            color: #667eea;
+        .step-outcome {
+            background: #d4edda; color: #155724;
+            padding: 10px; border-radius: 6px;
+            font-size: 0.9rem; font-weight: 500;
         }
 
-        .results {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            margin: 20px 0;
-            overflow: hidden;
+        .api-demo {
+            background: #f8f9fa; padding: 30px;
+            border-radius: 12px; margin: 30px 0;
         }
-        .results-header {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .demo-title {
+            font-size: 1.8rem; margin-bottom: 20px;
+            color: #333; text-align: center;
         }
-        .results-content {
-            padding: 20px;
+        .endpoint-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
         }
-        .view-toggle {
-            display: flex;
-            gap: 10px;
+        .endpoint-card {
+            background: white; padding: 20px;
+            border-radius: 8px; border: 2px solid #e9ecef;
+            transition: border-color 0.3s;
         }
-        .view-btn {
-            padding: 6px 12px;
-            border: 1px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+        .endpoint-card:hover {
+            border-color: #667eea;
         }
-        .view-btn.active {
-            background: #667eea;
-            color: white;
+        .endpoint-method {
+            background: #667eea; color: white;
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 0.8rem; font-weight: 600;
+            display: inline-block; margin-bottom: 10px;
         }
-
-        .success { color: #28a745; }
-        .error { color: #dc3545; }
-        .warning { color: #ffc107; }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        .data-table th,
-        .data-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .data-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .json-view {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            white-space: pre-wrap;
+        .endpoint-path {
             font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 0.9rem; color: #333;
+            margin-bottom: 10px; font-weight: 600;
+        }
+        .endpoint-description {
+            font-size: 0.9rem; color: #666;
+        }
+        .try-button {
+            background: #667eea; color: white;
+            padding: 8px 15px; border: none;
+            border-radius: 6px; cursor: pointer;
+            font-size: 0.9rem; margin-top: 10px;
+            transition: background 0.3s; width: 100%;
+        }
+        .try-button:hover {
+            background: #5a67d8;
+        }
+        .try-button:disabled {
+            background: #6c757d; cursor: not-allowed;
         }
 
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .metric-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        .metric-label {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-
-        .pricing-info {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 15px 0;
+        .demo-result {
+            margin-top: 15px; padding: 15px;
+            background: #f8f9fa; border-radius: 6px;
             border-left: 4px solid #28a745;
+            display: none;
+        }
+        .demo-result.show {
+            display: block; animation: slideDown 0.3s ease;
+        }
+        .demo-result.loading {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .demo-result.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
         }
 
-        .error-info {
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-            padding: 20px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid #dc3545;
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .links-section {
-            margin-top: 20px;
+        .curl-example {
+            background: #2d3748; color: #e2e8f0;
+            padding: 12px; border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem; overflow-x: auto;
+            margin: 10px 0;
         }
-        .link-item {
-            padding: 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            margin: 5px 0;
-            transition: background-color 0.2s;
-        }
-        .link-item:hover {
-            background: #f8f9fa;
-        }
-        .link-url {
-            font-weight: 500;
-            color: #667eea;
-            text-decoration: none;
-        }
-        .link-text {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 5px;
+        .json-response {
+            background: #f7fafc; border: 1px solid #e2e8f0;
+            padding: 12px; border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem; overflow-x: auto;
+            white-space: pre-wrap; max-height: 200px;
+            overflow-y: auto;
         }
 
-        .tab-content {
-            display: block;
+        .career-section {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            padding: 30px; border-radius: 12px;
+            margin: 30px 0; text-align: center;
+        }
+        .salary-progression {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin: 25px 0;
+        }
+        .salary-card {
+            background: white; padding: 20px;
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .salary-level {
+            font-size: 1.1rem; font-weight: 600;
+            color: #155724; margin-bottom: 10px;
+        }
+        .salary-range {
+            font-size: 1.5rem; font-weight: 700;
+            color: #28a745; margin-bottom: 10px;
+        }
+        .salary-time {
+            font-size: 0.9rem; color: #666;
         }
 
-        .strain-card {
-            background: linear-gradient(135deg, #a8e6cf, #88d8a3);
-            color: #2d5a3d;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
+        .cta-section {
+            text-align: center; padding: 40px 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white; border-radius: 12px;
+            margin: 30px 0;
+        }
+        .cta-button {
+            background: rgba(255,255,255,0.2);
+            color: white; padding: 15px 30px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px; font-size: 1.1rem;
+            font-weight: 600; cursor: pointer;
+            margin: 10px; transition: all 0.3s;
+            text-decoration: none; display: inline-block;
+        }
+        .cta-button:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
         }
 
-        .strain-name {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 10px;
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin: 30px 0;
         }
-
-        .strain-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+        .feature-card {
+            background: #f8f9fa; padding: 20px;
+            border-radius: 8px; text-align: center;
         }
-
-        .detail-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: 8px;
+        .feature-icon {
+            font-size: 3rem; margin-bottom: 15px;
         }
-
-        .detail-label {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            margin-bottom: 5px;
+        .feature-title {
+            font-size: 1.2rem; font-weight: 600;
+            margin-bottom: 10px; color: #333;
         }
-
-        .detail-value {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .feature-description {
+            color: #666; font-size: 0.95rem;
         }
 
         @media (max-width: 768px) {
-            .container { margin: 10px; border-radius: 8px; }
-            .content { padding: 20px; }
-            .checkbox-group { flex-direction: column; gap: 10px; }
-            .view-toggle { flex-direction: column; }
+            .header h1 { font-size: 2.2rem; }
+            .journey-title { font-size: 2rem; }
+            .container { margin: 10px; padding: 15px; }
+            .journey-steps { grid-template-columns: 1fr; }
+            .endpoint-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Hero Section -->
         <div class="header">
-            <h1>🪚 hacksaws2x4</h1>
-            <p>Gen Z Translator API - Advanced content extraction with challenging website specialty features</p>
+            <h1>🎓 Vibe Coding Academy</h1>
+            <p>Transform from Browser User to Elite API Developer in 30 Days</p>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-number">30</div>
+                    <div class="stat-label">Days to Elite</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">$250k+</div>
+                    <div class="stat-label">Career Potential</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">Elite</div>
+                    <div class="stat-label">DORA Performance</div>
+                </div>
+            </div>
         </div>
 
-        <div class="content">
-            <!-- Health Status -->
-            <div id="healthStatus" class="health-status health-healthy">
-                <div>🔄 Checking system health...</div>
-            </div>
+        <!-- Your Learning Journey -->
+        <div class="journey-section">
+            <h2 class="journey-title">🚀 Your Elite Development Journey</h2>
 
-            <!-- Navigation Tabs -->
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button class="view-btn active" onclick="showTab('extraction')" id="extractionTab">🧪 Content Extraction</button>
-                <button class="view-btn" onclick="showTab('cannabis')" id="cannabisTab">🔬 Specialized Content Search</button>
-                <button class="view-btn" onclick="showTab('analytics')" id="analyticsTab">📊 Analytics</button>
-            </div>
-
-            <!-- Content Extraction Tab -->
-            <div id="extractionContent" class="tab-content">
-                <div class="api-form">
-                    <h3>🧪 Content Extraction</h3>
-
-                <div class="form-group">
-                    <label for="urlInput">Target URL</label>
-                    <input type="url" id="urlInput"
-                           placeholder="example.com, or any challenging website URL"
-                           value="example.com"
-                           list="urlSuggestions">
-                    <datalist id="urlSuggestions">
-                        <option value="example.com">
-                        <option value="reddit.com">
-                        <option value="nypost.com">
-                        <option value="amazon.com">
-                        <option value="ebay.com">
-                        <option value="github.com">
-                    </datalist>
-                </div>
-
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="browserMode" checked>
-                        <label for="browserMode">🦊 Use Firefox Browser Emulation</label>
+            <div class="journey-steps">
+                <div class="step-card">
+                    <div class="step-number">Week 1</div>
+                    <div class="step-title">Foundation Building</div>
+                    <div class="step-description">
+                        Set up your development environment, create your first API, and learn security fundamentals
                     </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="followLinks">
-                        <label for="followLinks">🔗 Follow Links (one level deep)</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="takeScreenshot">
-                        <label for="takeScreenshot">📸 Take Screenshot</label>
+                    <div class="step-outcome">
+                        ✅ Your first production-ready API deployed
                     </div>
                 </div>
 
-                    <button onclick="extractContent()" id="extractBtn">
-                        🚀 Extract Content
-                    </button>
+                <div class="step-card">
+                    <div class="step-number">Week 2</div>
+                    <div class="step-title">Security & Performance</div>
+                    <div class="step-description">
+                        Master enterprise security practices, performance optimization, and automated testing
+                    </div>
+                    <div class="step-outcome">
+                        ✅ Zero security vulnerabilities achieved
+                    </div>
                 </div>
-            </div>
 
-            <!-- Specialized Content Search Tab -->
-            <div id="cannabisContent" class="tab-content" style="display: none;">
-                <div class="api-form">
-                    <h3>🔬 Specialized Content Search</h3>
-                    <p>Search for specialized content items with advanced filtering options</p>
-
-                    <div class="form-group">
-                        <label for="strainType">Content Type</label>
-                        <select id="strainType">
-                            <option value="">All Types</option>
-                            <option value="indica">Type A</option>
-                            <option value="sativa">Type B</option>
-                            <option value="hybrid">Mixed Type</option>
-                        </select>
+                <div class="step-card">
+                    <div class="step-number">Week 3</div>
+                    <div class="step-title">Advanced Architecture</div>
+                    <div class="step-description">
+                        Learn cloud deployment, monitoring, and enterprise-grade architectural patterns
                     </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label for="thcMin">Min Value %</label>
-                            <input type="number" id="thcMin" min="0" max="100" placeholder="e.g. 20">
-                        </div>
-                        <div class="form-group">
-                            <label for="thcMax">Max Value %</label>
-                            <input type="number" id="thcMax" min="0" max="100" placeholder="e.g. 30">
-                        </div>
+                    <div class="step-outcome">
+                        ✅ Azure cloud deployment mastered
                     </div>
-
-                    <div class="form-group">
-                        <label for="priceMax">Maximum Price ($)</label>
-                        <input type="number" id="priceMax" min="0" placeholder="e.g. 60">
-                    </div>
-
-                    <button onclick="searchStrains()" id="cannabisBtn">
-                        🔍 Search Content
-                    </button>
                 </div>
-            </div>
 
-            <!-- Analytics Tab -->
-            <div id="analyticsContent" class="tab-content" style="display: none;">
-                <div class="api-form">
-                    <h3>📊 Content Analytics</h3>
-                    <p>View content trends and usage statistics</p>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-                        <button onclick="loadAnalytics()" class="view-btn">📈 Market Trends</button>
-                        <button onclick="loadStats()" class="view-btn">📊 Usage Stats</button>
-                        <button onclick="loadPriceTrends()" class="view-btn">💰 Price Trends</button>
+                <div class="step-card">
+                    <div class="step-number">Week 4</div>
+                    <div class="step-title">Elite Mastery</div>
+                    <div class="step-description">
+                        AI-assisted development, DORA Elite metrics, and career preparation
+                    </div>
+                    <div class="step-outcome">
+                        ✅ Elite performer status achieved
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Progress Indicator -->
-            <div id="progressContainer" class="progress-container">
-                <div class="progress-bar">
-                    <div id="progressFill" class="progress-fill"></div>
-                </div>
-                <div id="progressText" class="progress-text">Initializing...</div>
-            </div>
+        <!-- Live API Demo -->
+        <div class="api-demo">
+            <h3 class="demo-title">🔥 Try Our Live Learning APIs</h3>
 
-            <!-- Results -->
-            <div id="results" class="results" style="display: none;">
-                <div class="results-header">
-                    <h3 id="resultsTitle">Extraction Results</h3>
-                    <div class="view-toggle">
-                        <button class="view-btn active" onclick="switchView('summary')">📊 Summary</button>
-                        <button class="view-btn" onclick="switchView('table')">📋 Table</button>
-                        <button class="view-btn" onclick="switchView('json')">🔍 JSON</button>
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-path">/api/learning/start</div>
+                    <div class="endpoint-description">Begin your 30-day Elite development journey</div>
+                    <button class="try-button" onclick="tryAPI('/api/learning/start', 'learning')" id="learning-btn">Try It Live</button>
+                    <div class="demo-result" id="learning-result">
+                        <div class="curl-example">curl http://localhost:3000/api/learning/start</div>
+                        <div class="json-response" id="learning-response"></div>
                     </div>
                 </div>
-                <div class="results-content" id="resultsContent"></div>
-            </div>
 
-            <!-- Quick Links -->
-            <div style="margin-top: 30px;">
-                <h3>📖 API Endpoints</h3>
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <a href="/health" style="text-decoration: none;">
-                            <div class="metric-value">💊</div>
-                            <div class="metric-label">Health Check</div>
-                        </a>
+                <div class="endpoint-card">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-path">/api/career/skills</div>
+                    <div class="endpoint-description">View real 2025 salary data and market demand</div>
+                    <button class="try-button" onclick="tryAPI('/api/career/skills', 'career')" id="career-btn">Try It Live</button>
+                    <div class="demo-result" id="career-result">
+                        <div class="curl-example">curl http://localhost:3000/api/career/skills</div>
+                        <div class="json-response" id="career-response"></div>
                     </div>
-                    <div class="metric-card">
-                        <a href="/api" style="text-decoration: none;">
-                            <div class="metric-value">📋</div>
-                            <div class="metric-label">API Info</div>
-                        </a>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-path">/api/security/scan</div>
+                    <div class="endpoint-description">Run educational security assessment</div>
+                    <button class="try-button" onclick="tryAPI('/api/security/scan', 'security')" id="security-btn">Try It Live</button>
+                    <div class="demo-result" id="security-result">
+                        <div class="curl-example">curl http://localhost:3000/api/security/scan</div>
+                        <div class="json-response" id="security-response"></div>
                     </div>
-                    <div class="metric-card">
-                        <a href="/api/stats" style="text-decoration: none;">
-                            <div class="metric-value">📊</div>
-                            <div class="metric-label">Statistics</div>
-                        </a>
-                    </div>
-                    <div class="metric-card">
-                        <a href="/api/examples" style="text-decoration: none;">
-                            <div class="metric-value">🎯</div>
-                            <div class="metric-label">Examples</div>
-                        </a>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-method">GET</div>
+                    <div class="endpoint-path">/health</div>
+                    <div class="endpoint-description">Check Elite performance metrics</div>
+                    <button class="try-button" onclick="tryAPI('/health', 'health')" id="health-btn">Try It Live</button>
+                    <div class="demo-result" id="health-result">
+                        <div class="curl-example">curl http://localhost:3000/health</div>
+                        <div class="json-response" id="health-response"></div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Career Progression -->
+        <div class="career-section">
+            <h3 style="margin-top: 0; font-size: 2rem; color: #155724;">💰 Your Career Progression Path</h3>
+            <p style="font-size: 1.1rem; color: #155724; margin-bottom: 25px;">
+                Real 2025 market rates for API development skills
+            </p>
+
+            <div class="salary-progression">
+                <div class="salary-card">
+                    <div class="salary-level">Junior Developer</div>
+                    <div class="salary-range">$50k - $75k</div>
+                    <div class="salary-time">Months 1-6</div>
+                </div>
+                <div class="salary-card">
+                    <div class="salary-level">Mid-Level Developer</div>
+                    <div class="salary-range">$75k - $120k</div>
+                    <div class="salary-time">Year 1-2</div>
+                </div>
+                <div class="salary-card">
+                    <div class="salary-level">Senior Developer</div>
+                    <div class="salary-range">$120k - $180k</div>
+                    <div class="salary-time">Year 2-5</div>
+                </div>
+                <div class="salary-card">
+                    <div class="salary-level">Principal Engineer</div>
+                    <div class="salary-range">$180k - $250k+</div>
+                    <div class="salary-time">Year 3-5</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">Security First</div>
+                <div class="feature-description">
+                    Learn enterprise-grade security from day one. Zero vulnerabilities, production-ready code.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Elite Performance</div>
+                <div class="feature-description">
+                    Achieve DORA Elite metrics: multiple daily deployments, sub-hour lead times.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI-Assisted Learning</div>
+                <div class="feature-description">
+                    Master Claude Code and AI pair programming for 5x development velocity.
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <div class="feature-title">Cloud Ready</div>
+                <div class="feature-description">
+                    Azure-optimized deployment, monitoring, and scaling from your first commit.
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h3 style="margin-top: 0; font-size: 2.2rem;">Ready to Transform Your Career?</h3>
+            <p style="font-size: 1.2rem; margin-bottom: 25px;">
+                Join the Elite developers. Start your journey today.
+            </p>
+
+            <a href="/api/learning/start" class="cta-button">🚀 Start Learning Now</a>
+            <a href="/api" class="cta-button">📚 View API Docs</a>
+            <a href="https://github.com" class="cta-button">📖 View Source Code</a>
+        </div>
+
+        <!-- Quick Links -->
+        <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <h4>🎯 Ready to Dive Deeper?</h4>
+            <p>Explore advanced security training at <a href="https://cleansheet.info" target="_blank" style="color: #667eea; font-weight: 600;">cleansheet.info</a></p>
+            <p style="font-size: 0.9rem; color: #666;">
+                This academy bridges you into their advanced security ecosystem
+            </p>
         </div>
     </div>
 
     <script>
-        let currentData = null;
-        let currentView = 'summary';
+        async function tryAPI(endpoint, demoId) {
+            const button = document.getElementById(demoId + '-btn');
+            const resultDiv = document.getElementById(demoId + '-result');
+            const responseDiv = document.getElementById(demoId + '-response');
 
-        // Check health on page load
-        window.addEventListener('load', checkHealth);
+            // Reset previous state
+            resultDiv.classList.remove('show', 'loading', 'error');
+            button.disabled = true;
+            button.textContent = 'Loading...';
 
-        async function checkHealth() {
-            try {
-                const response = await fetch('/health');
-                const health = await response.json();
-
-                const statusDiv = document.getElementById('healthStatus');
-                statusDiv.className = `health-status health-${health.status}`;
-
-                const statusIcon = health.status === 'healthy' ? '✅' :
-                                  health.status === 'degraded' ? '⚠️' : '❌';
-
-                statusDiv.innerHTML = `
-                    <div>
-                        ${statusIcon} System Status: ${health.status.toUpperCase()}
-                        <div class="health-details">
-                            Browser: ${health.browserTest || health.features?.browserEmulation || 'Unknown'} |
-                            Memory: ${health.memory?.used}MB |
-                            Uptime: ${Math.floor(health.uptime / 60)}m
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                const statusDiv = document.getElementById('healthStatus');
-                statusDiv.className = 'health-status health-error';
-                statusDiv.innerHTML = `<div>❌ Cannot connect to API server</div>`;
-            }
-        }
-
-        function normalizeUrl(url) {
-            // Trim whitespace
-            url = url.trim();
-
-            // If no protocol, add https
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-
-            // Fix common domain typos
-            url = url.replace('www.www.', 'www.');
-
-            return url;
-        }
-
-        async function extractContent() {
-            let url = document.getElementById('urlInput').value;
-            const browser = document.getElementById('browserMode').checked;
-            const followLinks = document.getElementById('followLinks').checked;
-            const screenshot = document.getElementById('takeScreenshot').checked;
-
-            if (!url) {
-                alert('Please enter a URL');
-                return;
-            }
-
-            // Normalize URL
-            url = normalizeUrl(url);
-            document.getElementById('urlInput').value = url; // Update display
-
-            // Immediate UI feedback
-            const btn = document.getElementById('extractBtn');
-            btn.disabled = true;
-            btn.textContent = '🚀 Starting...';
-            btn.style.background = '#6c757d';
-
-            // Show progress immediately
-            showProgress();
-            updateProgress(5, 'Validating URL...');
+            // Show loading state
+            resultDiv.classList.add('loading', 'show');
+            responseDiv.textContent = 'Making request...';
 
             try {
-                // Quick URL validation
-                try {
-                    new URL(url);
-                    updateProgress(15, `✅ URL validated: ${url}`);
-                } catch (e) {
-                    throw new Error(`Invalid URL: ${url}`);
-                }
-
-                await sleep(300);
-                updateProgress(25, browser ? 'Initializing Firefox browser...' : 'Preparing HTTP request...');
-                btn.textContent = browser ? '🦊 Loading browser...' : '📡 Fetching...';
-
-                await sleep(500);
-                updateProgress(40, 'Sending request...');
-
                 const startTime = Date.now();
-                const response = await fetch('/api/fetch-url', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        url,
-                        browser,
-                        followLinks,
-                        screenshot,
-                        structured: true
-                    })
-                });
-
-                const fetchTime = Date.now() - startTime;
-                updateProgress(70, `Request completed (${fetchTime}ms)`);
-
-                btn.textContent = '📊 Processing data...';
-                await sleep(200);
-
-                updateProgress(85, 'Parsing response...');
+                const response = await fetch(endpoint);
                 const data = await response.json();
+                const responseTime = Date.now() - startTime;
 
-                // Debug logging
-                console.log('API Response received:', data);
-                console.log('Response success:', data.success);
-                console.log('Response contentType:', data.contentType);
+                // Show success state
+                resultDiv.classList.remove('loading');
+                resultDiv.classList.add('show');
 
-                updateProgress(95, 'Formatting results...');
-                await sleep(200);
+                // Format response with timing info
+                const responseWithTiming = {
+                    responseTime: responseTime + 'ms',
+                    status: response.status,
+                    ...data
+                };
 
-                updateProgress(100, `✅ Complete! (${data.processingTime || fetchTime}ms total)`);
-                await sleep(400);
+                responseDiv.textContent = JSON.stringify(responseWithTiming, null, 2);
 
-                // Always show results - success or error
-                console.log('About to call displayResults with:', data);
-                hideProgress();
-                displayResults(data);
+                // Update button
+                button.textContent = `✅ Success (${responseTime}ms)`;
+
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.textContent = 'Try It Live';
+                }, 3000);
 
             } catch (error) {
-                // Always show error results
-                updateProgress(100, `❌ Error: ${error.message}`);
-                await sleep(500);
+                // Show error state
+                resultDiv.classList.remove('loading');
+                resultDiv.classList.add('error', 'show');
 
-                hideProgress();
-                displayResults({
-                    success: false,
-                    error: error.message,
-                    url: url,
+                responseDiv.textContent = JSON.stringify({
+                    error: true,
+                    message: error.message,
+                    endpoint: endpoint,
                     timestamp: new Date().toISOString(),
-                    suggestion: 'Check the URL and try again, or try without browser emulation'
-                });
-            } finally {
-                // Reset button
-                btn.disabled = false;
-                btn.textContent = '🚀 Extract Content';
-                btn.style.background = ''; // Reset to CSS default
+                    suggestion: 'Make sure the server is running on localhost:3000'
+                }, null, 2);
+
+                // Update button
+                button.textContent = '❌ Error - Try Again';
+
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.textContent = 'Try It Live';
+                }, 3000);
             }
         }
 
-        function showProgress() {
-            document.getElementById('progressContainer').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-        }
-
-        function hideProgress() {
-            document.getElementById('progressContainer').style.display = 'none';
-        }
-
-        function updateProgress(percent, text) {
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('progressText').textContent = text;
-        }
-
-        function displayResults(data) {
-            console.log('displayResults called with:', data);
-            currentData = data;
-
-            // Always show results section
-            const resultsElement = document.getElementById('results');
-            console.log('Results element found:', resultsElement);
-            resultsElement.style.display = 'block';
-
-            if (data.success) {
-                console.log('Displaying success results');
-                document.getElementById('resultsTitle').innerHTML = '✅ Extraction Successful';
-
-                // Check if it was a fallback
-                if (data.fallback) {
-                    document.getElementById('resultsTitle').innerHTML = '⚠️ Extraction Successful (HTTP Fallback)';
-                }
-
-                console.log('About to call switchView with:', currentView);
-                switchView(currentView);
-            } else {
-                document.getElementById('resultsTitle').innerHTML = '❌ Extraction Failed';
-                displayErrorResults(data);
-            }
-        }
-
-        function displayErrorResults(data) {
-            const content = document.getElementById('resultsContent');
-
-            // Create a comprehensive error display
-            const errorTime = data.timestamp || new Date().toISOString();
-            const errorUrl = data.url || 'Unknown URL';
-
-            content.innerHTML = `
-                <div class="error-info">
-                    <h4>❌ Extraction Failed</h4>
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-value" style="color: #dc3545;">Failed</div>
-                            <div class="metric-label">Status</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">${data.processingTime || 0}ms</div>
-                            <div class="metric-label">Processing Time</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">${data.extractionMethod || 'Unknown'}</div>
-                            <div class="metric-label">Method</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-value">${errorTime.split('T')[1]?.split('.')[0] || 'Unknown'}</div>
-                            <div class="metric-label">Time</div>
-                        </div>
-                    </div>
-
-                    <h4>📄 Request Details</h4>
-                    <p><strong>URL:</strong> <a href="${errorUrl}" target="_blank">${errorUrl}</a></p>
-                    <p><strong>Error:</strong> ${data.error || data.message || 'Unknown error occurred'}</p>
-
-                    ${data.suggestion ? `
-                        <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                            <h4>💡 Suggestions</h4>
-                            <p>${data.suggestion}</p>
-                            <ul>
-                                <li>Try disabling browser emulation (uncheck Firefox option)</li>
-                                <li>Check if the URL is accessible in your browser</li>
-                                <li>Some sites block automated requests</li>
-                                <li>Try a different URL to test the service</li>
-                            </ul>
-                        </div>
-                    ` : ''}
-
-                    ${data.browserError ? `
-                        <div style="background: #f8d7da; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #dc3545;">
-                            <h4>🦊 Browser Error</h4>
-                            <p>${data.browserError}</p>
-                            <p><em>The system will automatically retry with HTTP-only extraction.</em></p>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <details style="margin-top: 20px;">
-                    <summary style="cursor: pointer; font-weight: 600; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                        🔍 Raw Response Data (for debugging)
-                    </summary>
-                    <div class="json-view" style="margin-top: 10px;">${JSON.stringify(data, null, 2)}</div>
-                </details>
-            `;
-        }
-
-
-        function switchView(view) {
-            currentView = view;
-
-            // Update active button
-            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick="switchView('${view}')"]`).classList.add('active');
-
-            if (!currentData || !currentData.success) return;
-
-            const content = document.getElementById('resultsContent');
-
-            switch(view) {
-                case 'summary':
-                    displaySummaryView(content);
-                    break;
-                case 'table':
-                    displayTableView(content);
-                    break;
-                case 'json':
-                    displayJsonView(content);
-                    break;
-            }
-        }
-
-        function displaySummaryView(content) {
-            const data = currentData;
-
-            // Metrics
-            let metricsHtml = `
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="metric-value">${data.processingTime || 0}ms</div>
-                        <div class="metric-label">Processing Time</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${data.contentType || 'Generic'}</div>
-                        <div class="metric-label">Content Type</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${data.extractionMethod || 'Unknown'}</div>
-                        <div class="metric-label">Method</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-value">${data.metrics?.popupsHandled || 0}</div>
-                        <div class="metric-label">Popups Handled</div>
-                    </div>
-                </div>
-            `;
-
-            // Content details with enhanced information
-            let detailsHtml = `
-                <h4>📄 Content Details</h4>
-                <p><strong>Title:</strong> ${data.data?.title || 'No title'}</p>
-                <p><strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a></p>
-                <p><strong>Content Type:</strong> ${data.contentType || 'Unknown'}</p>
-                <p><strong>Browser Emulation:</strong> ${data.browserEnabled ? '🦊 Firefox' : '📡 HTTP-only'}</p>
-                <p><strong>Processing Time:</strong> ${data.processingTime || 0}ms</p>
-                ${data.fallback ? '<p class="warning">⚠️ Used HTTP fallback (browser emulation failed)</p>' : ''}
-
-                ${data.data?.headers && data.data.headers.length > 0 ? `
-                    <h5>🔍 Page Structure</h5>
-                    <ul>
-                        ${data.data.headers.slice(0, 5).map(header =>
-                            `<li><strong>H${header.level}:</strong> ${header.text}</li>`
-                        ).join('')}
-                        ${data.data.headers.length > 5 ? `<li><em>... and ${data.data.headers.length - 5} more headers</em></li>` : ''}
-                    </ul>
-                ` : ''}
-
-                ${data.data?.content?.description ? `
-                    <h5>📝 Description</h5>
-                    <p>${data.data.content.description.substring(0, 200)}${data.data.content.description.length > 200 ? '...' : ''}</p>
-                ` : ''}
-
-                ${(!data.data?.content?.description && (!data.data?.headers || data.data.headers.length === 0)) ? `
-                    <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                        <h5>💡 Limited Content Extracted</h5>
-                        <p>This page may have:</p>
-                        <ul>
-                            <li>Dynamic content loaded with JavaScript</li>
-                            <li>Anti-bot protection</li>
-                            <li>Minimal content structure</li>
-                        </ul>
-                        <p><strong>Try:</strong> Different URLs like news articles, product pages, or enable browser emulation for complex sites.</p>
-                    </div>
-                ` : ''}
-            `;
-
-            // Pricing info if available
-            let pricingHtml = '';
-            if (data.data?.pricing && (data.data.pricing.currentPrice || data.data.pricing.availability)) {
-                pricingHtml = `
-                    <div class="pricing-info">
-                        <h4>💰 Product Pricing</h4>
-                        ${data.data.pricing.currentPrice ? `<p><strong>Price:</strong> ${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}</p>` : ''}
-                        ${data.data.pricing.availability ? `<p><strong>Availability:</strong> ${data.data.pricing.availability}</p>` : ''}
-                        ${data.data.pricing.discount ? `<p><strong>Discount:</strong> ${data.data.pricing.discount.percentage}% OFF</p>` : ''}
-                    </div>
-                `;
-            }
-
-            // Additional metadata section
-            let metadataHtml = '';
-            if (data.data?.metadata) {
-                const meta = data.data.metadata;
-                metadataHtml = `
-                    <h4>🔍 Extracted Metadata</h4>
-                    <div class="metrics-grid">
-                        ${meta.brand ? `
-                            <div class="metric-card">
-                                <div class="metric-value">${meta.brand}</div>
-                                <div class="metric-label">Brand</div>
-                            </div>
-                        ` : ''}
-                        ${meta.category ? `
-                            <div class="metric-card">
-                                <div class="metric-value">${meta.category}</div>
-                                <div class="metric-label">Category</div>
-                            </div>
-                        ` : ''}
-                        ${meta.tags && meta.tags.length > 0 ? `
-                            <div class="metric-card">
-                                <div class="metric-value">${meta.tags.length}</div>
-                                <div class="metric-label">Tags Found</div>
-                            </div>
-                        ` : ''}
-                        <div class="metric-card">
-                            <div class="metric-value">${new Date(meta.lastUpdated).toLocaleTimeString()}</div>
-                            <div class="metric-label">Extracted At</div>
-                        </div>
-                    </div>
-                    ${meta.tags && meta.tags.length > 0 ? `
-                        <p><strong>Tags:</strong> ${meta.tags.slice(0, 5).join(', ')}${meta.tags.length > 5 ? '...' : ''}</p>
-                    ` : ''}
-                `;
-            }
-
-            // Links if available
-            let linksHtml = '';
-            if (data.linkedPages?.length > 0) {
-                linksHtml = `
-                    <div class="links-section">
-                        <h4>🔗 Found Links (${data.linkedPages.length})</h4>
-                        ${data.linkedPages.slice(0, 5).map(link => `
-                            <div class="link-item">
-                                <a href="${link.url}" target="_blank" class="link-url">${link.text || 'Untitled'}</a>
-                                <div class="link-text">${link.context || link.url}</div>
-                            </div>
-                        `).join('')}
-                        ${data.linkedPages.length > 5 ? `<p>... and ${data.linkedPages.length - 5} more links</p>` : ''}
-                    </div>
-                `;
-            }
-
-            content.innerHTML = metricsHtml + detailsHtml + metadataHtml + pricingHtml + linksHtml;
-        }
-
-        function displayTableView(content) {
-            const data = currentData;
-
-            let tableRows = [
-                ['Property', 'Value'],
-                ['Status', data.success ? '✅ Success' : '❌ Failed'],
-                ['Processing Time', `${data.processingTime || 0}ms`],
-                ['Content Type', data.contentType || 'Generic'],
-                ['Extraction Method', data.extractionMethod || 'Unknown'],
-                ['Browser Emulation', data.browserEnabled ? '🦊 Firefox' : '📡 HTTP-only'],
-                ['Title', data.data?.title || 'No title'],
-                ['URL', `<a href="${data.url}" target="_blank">${data.url}</a>`],
-                ['Headers Found', data.data?.headers?.length || 0],
-                ['Popups Handled', data.metrics?.popupsHandled || 0],
-                ['Browser Fallback', data.fallback ? 'Yes' : 'No'],
-                ['Environment', data.environment || 'Unknown']
-            ];
-
-            // Add pricing info if available
-            if (data.data?.pricing && data.data.pricing.currentPrice) {
-                tableRows.push(
-                    ['Price', `${data.data.pricing.currency || '$'}${data.data.pricing.currentPrice}`]
-                );
-            }
-            if (data.data?.pricing && data.data.pricing.availability) {
-                tableRows.push(
-                    ['Availability', data.data.pricing.availability]
-                );
-            }
-
-            // Add metadata if available
-            if (data.data?.metadata) {
-                const meta = data.data.metadata;
-                if (meta.brand) tableRows.push(['Brand', meta.brand]);
-                if (meta.category) tableRows.push(['Category', meta.category]);
-                if (meta.tags && meta.tags.length > 0) {
-                    tableRows.push(['Tags', meta.tags.slice(0, 3).join(', ') + (meta.tags.length > 3 ? '...' : '')]);
-                }
-                tableRows.push(['Last Updated', new Date(meta.lastUpdated).toLocaleString()]);
-            }
-
-            const tableHtml = `
-                <table class="data-table">
-                    ${tableRows.map((row, index) =>
-                        index === 0
-                            ? `<tr>${row.map(cell => `<th>${cell}</th>`).join('')}</tr>`
-                            : `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
-                    ).join('')}
-                </table>
-            `;
-
-            content.innerHTML = tableHtml;
-        }
-
-        function displayJsonView(content) {
-            content.innerHTML = `<div class="json-view">${JSON.stringify(currentData, null, 2)}</div>`;
-        }
-
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // Tab switching functionality
-        function showTab(tabName) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
-
-            // Remove active class from all tabs
-            document.querySelectorAll('.view-btn').forEach(tab => {
-                if (tab.onclick && tab.onclick.toString().includes('showTab')) {
-                    tab.classList.remove('active');
-                }
-            });
-
-            // Show selected tab content
-            document.getElementById(tabName + 'Content').style.display = 'block';
-
-            // Add active class to clicked tab
-            document.getElementById(tabName + 'Tab').classList.add('active');
-        }
-
-        // Cannabis strain search functionality
-        async function searchStrains() {
-            const strainType = document.getElementById('strainType').value;
-            const thcMin = document.getElementById('thcMin').value;
-            const thcMax = document.getElementById('thcMax').value;
-            const priceMax = document.getElementById('priceMax').value;
-
-            const btn = document.getElementById('cannabisBtn');
-            btn.disabled = true;
-            btn.textContent = '🔍 Searching...';
-
-            try {
-                const params = new URLSearchParams();
-                if (strainType) params.append('type', strainType);
-                if (thcMin) params.append('thc_min', thcMin);
-                if (thcMax) params.append('thc_max', thcMax);
-                if (priceMax) params.append('price_max', priceMax);
-
-                const response = await fetch(`/api/cannabis/strains?${params}`);
-                const data = await response.json();
-
-                displayCannabisResults(data);
-
-            } catch (error) {
-                displayCannabisResults({
-                    success: false,
-                    error: error.message
-                });
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🔍 Search Strains';
-            }
-        }
-
-        function displayCannabisResults(data) {
-            let resultsHtml = '';
-
-            if (data.success && data.strains && data.strains.length > 0) {
-                resultsHtml = `
-                    <div class="results" style="display: block;">
-                        <div class="results-header">
-                            <h3>🌿 Found ${data.strains.length} Strains</h3>
-                        </div>
-                        <div class="results-content">
-                            ${data.strains.map(strain => renderStrainCard(strain)).join('')}
-                        </div>
-                    </div>
-                `;
-            } else if (data.success) {
-                resultsHtml = `
-                    <div class="results" style="display: block;">
-                        <div class="results-content">
-                            <p>No strains found matching your criteria. Try adjusting your filters.</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                resultsHtml = `
-                    <div class="results" style="display: block;">
-                        <div class="results-content">
-                            <div class="error-info">
-                                <h4>❌ Search Failed</h4>
-                                <p>${data.error || 'Unknown error occurred'}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Remove existing results and add new ones
-            const existingResults = document.querySelector('#cannabisContent .results');
-            if (existingResults) {
-                existingResults.remove();
-            }
-            document.getElementById('cannabisContent').insertAdjacentHTML('beforeend', resultsHtml);
-        }
-
-        function renderStrainCard(strain) {
-            return `
-                <div class="strain-card">
-                    <div class="strain-name">${strain.strain?.name || 'Unknown Strain'}</div>
-                    <div class="strain-details">
-                        <div class="detail-item">
-                            <div class="detail-label">Type</div>
-                            <div class="detail-value">${strain.strain?.type || 'Unknown'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">THC</div>
-                            <div class="detail-value">${strain.potency?.thc?.percentage || 'N/A'}%</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">CBD</div>
-                            <div class="detail-value">${strain.potency?.cbd?.percentage || 'N/A'}%</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Price</div>
-                            <div class="detail-value">$${strain.pricing?.current_price || 'N/A'}</div>
-                        </div>
-                        ${strain.dispensary ? `
-                        <div class="detail-item">
-                            <div class="detail-label">Dispensary</div>
-                            <div class="detail-value">${strain.dispensary.name}</div>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Analytics functions
-        async function loadAnalytics() {
-            try {
-                const response = await fetch('/api/cannabis/analytics');
-                const data = await response.json();
-                displayAnalyticsResults('Market Analytics', data);
-            } catch (error) {
-                displayAnalyticsResults('Error', { error: error.message });
-            }
-        }
-
-        async function loadStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                displayAnalyticsResults('Usage Statistics', data);
-            } catch (error) {
-                displayAnalyticsResults('Error', { error: error.message });
-            }
-        }
-
-        async function loadPriceTrends() {
-            try {
-                const response = await fetch('/api/cannabis/trends?days=30');
-                const data = await response.json();
-                displayAnalyticsResults('30-Day Price Trends', data);
-            } catch (error) {
-                displayAnalyticsResults('Error', { error: error.message });
-            }
-        }
-
-        function displayAnalyticsResults(title, data) {
-            const resultsHtml = `
-                <div class="results" style="display: block;">
-                    <div class="results-header">
-                        <h3>📊 ${title}</h3>
-                    </div>
-                    <div class="results-content">
-                        <div class="json-view">${JSON.stringify(data, null, 2)}</div>
-                    </div>
-                </div>
-            `;
-
-            // Remove existing results and add new ones
-            const existingResults = document.querySelector('#analyticsContent .results');
-            if (existingResults) {
-                existingResults.remove();
-            }
-            document.getElementById('analyticsContent').insertAdjacentHTML('beforeend', resultsHtml);
-        }
-
-        // Auto-focus on URL input
-        document.getElementById('urlInput').focus();
+        // Auto-demo on page load to show it works
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // Auto-try the health endpoint to show working demo
+                tryAPI('/health', 'health');
+            }, 2000);
+        });
     </script>
 </body>
 </html>

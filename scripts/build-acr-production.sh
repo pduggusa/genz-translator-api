@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Configuration
 REGISTRY_NAME="${REGISTRY_NAME:-genztranslatoracrcentralus}"
 REGISTRY_LOGIN_SERVER="${REGISTRY_LOGIN_SERVER:-genztranslatoracrcentralus.azurecr.io}"
-IMAGE_NAME="${IMAGE_NAME:-hacksaws2x4}"
+IMAGE_NAME="${IMAGE_NAME:-vibe-coding-academy}"
 DOCKERFILE="${DOCKERFILE:-Dockerfile.optimized}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 

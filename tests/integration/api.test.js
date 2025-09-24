@@ -32,8 +32,8 @@ describe('= Integration Tests - API Endpoints', () => {
         .expect(200);
 
       expect(response.body).toBeDefined();
-      expect(response.body.name).toContain('hacksaws2x4');
-      expect(response.body.version).toBe('3.0.0');
+      expect(response.body.platform).toBe('Vibe Coding Academy');
+      expect(response.body.version).toBe('1.0.0');
     });
 
     test('should not expose sensitive information', async () => {

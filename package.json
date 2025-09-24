@@ -40,7 +40,7 @@
     "postinstall": "npx playwright install firefox --with-deps",
     "validate:production": "NODE_ENV=production npm run test:security && npm run security:audit",
     "build:optimized": "./scripts/build-optimized.sh",
-    "build:cached": "DOCKER_BUILDKIT=1 docker build -f Dockerfile.optimized -t hacksaws2x4:cached --cache-from hacksaws2x4:cache .",
+    "build:cached": "DOCKER_BUILDKIT=1 docker build -f Dockerfile.optimized -t vibe-coding-academy:cached --cache-from vibe-coding-academy:cache .",
     "build:production": "./scripts/build-acr-production.sh",
     "build:acr": "./scripts/build-acr-production.sh",
     "build:acr:amd64": "PLATFORM=linux/amd64 ./scripts/build-acr-production.sh",

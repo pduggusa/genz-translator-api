@@ -7,7 +7,7 @@ class GitHubAPIClient {
   constructor (token = null) {
     this.octokit = new Octokit({
       auth: token || process.env.GITHUB_TOKEN,
-      userAgent: 'hacksaws2x4-accessibility-analyzer/3.0.0'
+      userAgent: 'vibe-coding-academy-analyzer/3.0.0'
     });
 
     this.rateLimitThreshold = 100; // Reserve calls for critical operations

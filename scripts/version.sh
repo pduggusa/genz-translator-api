@@ -1,6 +1,6 @@
 #!/bin/bash
 # scripts/version.sh
-# Version management script for hacksaws2x4
+# Version management script for vibe-coding-academy
 
 set -e
 
@@ -30,7 +30,7 @@ print_error() {
 
 # Function to show usage
 show_usage() {
-    echo "🚀 hacksaws2x4 Version Management"
+    echo "🚀 vibe-coding-academy Version Management"
     echo ""
     echo "Usage: $0 [command] [options]"
     echo ""
@@ -248,7 +248,7 @@ show_status() {
     local commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "unknown")
     local current_branch=$(git branch --show-current)
 
-    echo "🚀 hacksaws2x4 Version Status"
+    echo "🚀 vibe-coding-academy Version Status"
     echo "═══════════════════════════════"
     echo "📦 Package Version:    $current_version"
     echo "🏷️  Latest Tag:        $latest_tag"

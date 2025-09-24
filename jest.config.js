@@ -125,7 +125,7 @@ module.exports = {
         filename: 'test-report.html',
         expand: true,
         hideIcon: false,
-        pageTitle: 'hacksaws2x4 - Test Report'
+        pageTitle: 'vibe-coding-academy - Test Report'
       }
     ]
   ],
