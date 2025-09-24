@@ -202,7 +202,7 @@ async function setupPage (browser) {
     }
 
     // Add some human-like mouse movement simulation
-    let mouseX = 0, mouseY = 0;
+    let mouseX = 0; let mouseY = 0;
     const updateMouse = () => {
       mouseX += (Math.random() - 0.5) * 2;
       mouseY += (Math.random() - 0.5) * 2;
@@ -447,7 +447,7 @@ async function fetchPageWithBrowser (url, options = {}) {
           // Look for elements containing THC percentage data like "THC 27.9%"
           const elements = document.querySelectorAll('*');
           let thcCount = 0;
-          for (let el of elements) {
+          for (const el of elements) {
             if (el.textContent && el.textContent.match(/THC\s+\d+(\.\d+)?%/)) {
               thcCount++;
             }
@@ -473,7 +473,6 @@ async function fetchPageWithBrowser (url, options = {}) {
         await page.waitForTimeout(2000);
 
         console.log('✅ Completed scroll and wait for lazy loading');
-
       } catch (e) {
         console.log('⚠️ Timeout waiting for product cards, proceeding with extraction');
       }
@@ -524,7 +523,7 @@ async function fetchPageWithBrowser (url, options = {}) {
         await page.waitForFunction(() => {
           const elements = document.querySelectorAll('*');
           let productCount = 0;
-          for (let el of elements) {
+          for (const el of elements) {
             const text = el.textContent?.toLowerCase() || '';
             if (text.includes('flower') || text.includes('strain') || text.match(/\$\d+/)) {
               productCount++;
@@ -534,7 +533,6 @@ async function fetchPageWithBrowser (url, options = {}) {
         }, { timeout: 20000 });
 
         console.log('✅ Lake Leaf content loaded successfully');
-
       } catch (e) {
         console.log('⚠️ Lake Leaf special handling failed, proceeding with standard extraction');
       }

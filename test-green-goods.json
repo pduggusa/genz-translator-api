@@ -1,8 +1,0 @@
-{
-  "url": "https://visitgreengoods.com/bloomington-mn-menu-med/menu/flower",
-  "extractionType": "cannabis",
-  "options": {
-    "waitForSelector": ".product, .strain, [data-testid], .menu-item",
-    "timeout": 10000
-  }
-}

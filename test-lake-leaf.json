@@ -1,8 +1,0 @@
-{
-  "url": "https://lakeleafretail.com/store/category/flower",
-  "extractionType": "cannabis",
-  "options": {
-    "waitForSelector": ".product, .strain, [data-testid], .menu-item, .flower",
-    "timeout": 30000
-  }
-}

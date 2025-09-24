@@ -375,7 +375,7 @@ function extractProductHeaders ($) {
 }
 
 // Green Goods parser for copy-paste data
-function parseGreenGoodsData(pageText, location, sourceUrl) {
+function parseGreenGoodsData (pageText, location, sourceUrl) {
   const products = [];
 
   // Split by "Add to bag" or "Select weight" to separate products
@@ -448,7 +448,7 @@ function parseGreenGoodsData(pageText, location, sourceUrl) {
 }
 
 // Lake Leaf parser for copy-paste data
-function parseLakeLeafData(pageText, location, sourceUrl) {
+function parseLakeLeafData (pageText, location, sourceUrl) {
   const products = [];
 
   // Parse the Lake Leaf format from your paste data:
@@ -492,17 +492,17 @@ function parseLakeLeafData(pageText, location, sourceUrl) {
 
                 const product = {
                   type: 'cannabis-flower',
-                  cannabisType: cannabisType,
+                  cannabisType,
                   vendor: brand,
-                  strain: strain,
+                  strain,
                   productName: strain,
                   productType: 'Flower',
                   thc: `${thc}%`,
                   cbd: null,
-                  weight: weight,
+                  weight,
                   price: `$${price.toFixed(2)}`,
-                  location: location,
-                  sourceUrl: sourceUrl,
+                  location,
+                  sourceUrl,
                   source: 'lake-leaf-multiline',
                   pricePerGram: (price / 3.5).toFixed(2),
                   thcPerDollar: (thc / price).toFixed(3)
@@ -524,7 +524,7 @@ function parseLakeLeafData(pageText, location, sourceUrl) {
 }
 
 // Dutchie parser for copy-paste data
-function parseDutchieData(pageText, location, sourceUrl) {
+function parseDutchieData (pageText, location, sourceUrl) {
   const products = [];
 
   // Parse the Dutchie format:
@@ -642,18 +642,18 @@ function parseDutchieData(pageText, location, sourceUrl) {
             const weightNum = parseFloat(weightInfo.weight.replace('g', ''));
             const product = {
               type: 'cannabis-flower',
-              cannabisType: cannabisType,
+              cannabisType,
               vendor: brand,
-              tier: tier,
-              strain: strain,
+              tier,
+              strain,
               productName: strain,
               productType: 'Flower',
               thc: `${thc}%`,
               cbd: null,
               weight: weightInfo.weight,
               price: `$${weightInfo.price.toFixed(2)}`,
-              location: location,
-              sourceUrl: sourceUrl,
+              location,
+              sourceUrl,
               source: 'dutchie-multiline',
               pricePerGram: (weightInfo.price / weightNum).toFixed(2),
               thcPerDollar: (parseFloat(thc) / weightInfo.price).toFixed(3)
@@ -670,7 +670,7 @@ function parseDutchieData(pageText, location, sourceUrl) {
 }
 
 // Parse multi-line product cards from Rise Cannabis copy-paste format
-function parseMultiLineProductCards(pageText, riseLocation, url) {
+function parseMultiLineProductCards (pageText, riseLocation, url) {
   const products = [];
   const lines = pageText.split('\n').map(line => line.trim());
 
@@ -718,17 +718,17 @@ function parseMultiLineProductCards(pageText, riseLocation, url) {
 
       const product = {
         type: 'cannabis-flower',
-        cannabisType: cannabisType,
-        vendor: vendor,
+        cannabisType,
+        vendor,
         productName: strain,
-        productType: productType,
+        productType,
         thc: `${thcPercent}%`,
         cbd: `${cbdPercent}%`,
         weight: `${weightValue}g`,
         price: `$${priceValue}`,
-        rating: rating,
-        reviewCount: reviewCount,
-        riseLocation: riseLocation,
+        rating,
+        reviewCount,
+        riseLocation,
         sourceUrl: url,
         source: 'rise-cannabis-multiline',
         pricePerGram: (parseFloat(priceValue) / parseFloat(weightValue)).toFixed(2),
@@ -896,9 +896,9 @@ function extractProductContent ($, url) {
       Array.from(productUrls).forEach((productUrl, index) => {
         // Extract strain name from URL path
         const urlMatch = productUrl.match(/\/product\/\d+\/([^\/]+)\/?$/);
-        const strainFromUrl = urlMatch ?
-          urlMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim() :
-          'Unknown Strain';
+        const strainFromUrl = urlMatch
+          ? urlMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).trim()
+          : 'Unknown Strain';
 
         // Extract vendor and strain
         const parts = strainFromUrl.split(' ');
@@ -908,8 +908,8 @@ function extractProductContent ($, url) {
         const feature = {
           type: 'cannabis-flower',
           productName: strainName,
-          vendor: vendor,
-          riseLocation: riseLocation,
+          vendor,
+          riseLocation,
           sourceUrl: productUrl,
           thc: null, // Will be filled when individual page is extracted
           terpenes: null,
@@ -929,86 +929,86 @@ function extractProductContent ($, url) {
 
       // Rise Cannabis uses div[class*="product"] for individual products
       $('div[class*="product"]').each((i, el) => {
-      const $product = $(el);
-      const productText = $product.text().trim();
+        const $product = $(el);
+        const productText = $product.text().trim();
 
-      if (productText && productText.length > 5 && productText.length < 500) {
+        if (productText && productText.length > 5 && productText.length < 500) {
         // Look for product link/URL - Rise Cannabis uses links like /product/1897723/rythm-bananaconda/
         // Try multiple selectors to find product links
-        let $link, productUrl;
+          let $link, productUrl;
 
-        // Try direct link in product
-        $link = $product.find('a').first();
-        if ($link.length) {
-          productUrl = $link.attr('href');
-        }
-
-        // Try parent/ancestor links that might wrap the product card
-        if (!productUrl) {
-          $link = $product.closest('a');
+          // Try direct link in product
+          $link = $product.find('a').first();
           if ($link.length) {
             productUrl = $link.attr('href');
           }
-        }
 
-        // Try looking for any links containing "/product/" in the product area
-        if (!productUrl) {
-          $product.find('a').each((idx, linkEl) => {
-            const href = $(linkEl).attr('href');
-            if (href && href.includes('/product/')) {
-              productUrl = href;
-              $link = $(linkEl);
-              return false; // Break
+          // Try parent/ancestor links that might wrap the product card
+          if (!productUrl) {
+            $link = $product.closest('a');
+            if ($link.length) {
+              productUrl = $link.attr('href');
             }
-          });
-        }
-
-        // Look in broader area around this product element
-        if (!productUrl) {
-          $product.parent().find('a').each((idx, linkEl) => {
-            const href = $(linkEl).attr('href');
-            if (href && href.includes('/product/')) {
-              productUrl = href;
-              $link = $(linkEl);
-              return false; // Break
-            }
-          });
-        }
-
-        const fullProductUrl = productUrl ? (productUrl.startsWith('http') ? productUrl : `https://risecannabis.com${productUrl}`) : null;
-
-        // Extract strain name from URL path (e.g., "rythm-bananaconda" from "/product/1897723/rythm-bananaconda/")
-        let strainFromUrl = 'Unknown Strain';
-        if (productUrl) {
-          const urlMatch = productUrl.match(/\/product\/\d+\/([^\/]+)\/?$/);
-          if (urlMatch) {
-            strainFromUrl = urlMatch[1]
-              .replace(/-/g, ' ')
-              .replace(/\b\w/g, l => l.toUpperCase())
-              .trim();
           }
-        }
 
-        // Extract strain/product name - prefer URL-based strain name, fallback to text extraction
-        let productName = strainFromUrl !== 'Unknown Strain' ? strainFromUrl : 'Product Name Not Found';
+          // Try looking for any links containing "/product/" in the product area
+          if (!productUrl) {
+            $product.find('a').each((idx, linkEl) => {
+              const href = $(linkEl).attr('href');
+              if (href && href.includes('/product/')) {
+                productUrl = href;
+                $link = $(linkEl);
+                return false; // Break
+              }
+            });
+          }
 
-        // First, try common cannabis strain name selectors
-        const nameSelectors = [
-          'h1, h2, h3, h4, h5, h6',
-          '[class*="name"]',
-          '[class*="title"]',
-          '[class*="strain"]',
-          '[data-testid*="name"]',
-          '[class*="product-name"]',
-          'span, div, p'
-        ];
+          // Look in broader area around this product element
+          if (!productUrl) {
+            $product.parent().find('a').each((idx, linkEl) => {
+              const href = $(linkEl).attr('href');
+              if (href && href.includes('/product/')) {
+                productUrl = href;
+                $link = $(linkEl);
+                return false; // Break
+              }
+            });
+          }
 
-        for (const selector of nameSelectors) {
-          const elements = $product.find(selector);
-          elements.each((idx, el) => {
-            const text = $(el).text().trim();
-            // Look for strain name patterns (typically 2-3 words, not just weight/price)
-            if (text &&
+          const fullProductUrl = productUrl ? (productUrl.startsWith('http') ? productUrl : `https://risecannabis.com${productUrl}`) : null;
+
+          // Extract strain name from URL path (e.g., "rythm-bananaconda" from "/product/1897723/rythm-bananaconda/")
+          let strainFromUrl = 'Unknown Strain';
+          if (productUrl) {
+            const urlMatch = productUrl.match(/\/product\/\d+\/([^\/]+)\/?$/);
+            if (urlMatch) {
+              strainFromUrl = urlMatch[1]
+                .replace(/-/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase())
+                .trim();
+            }
+          }
+
+          // Extract strain/product name - prefer URL-based strain name, fallback to text extraction
+          let productName = strainFromUrl !== 'Unknown Strain' ? strainFromUrl : 'Product Name Not Found';
+
+          // First, try common cannabis strain name selectors
+          const nameSelectors = [
+            'h1, h2, h3, h4, h5, h6',
+            '[class*="name"]',
+            '[class*="title"]',
+            '[class*="strain"]',
+            '[data-testid*="name"]',
+            '[class*="product-name"]',
+            'span, div, p'
+          ];
+
+          for (const selector of nameSelectors) {
+            const elements = $product.find(selector);
+            elements.each((idx, el) => {
+              const text = $(el).text().trim();
+              // Look for strain name patterns (typically 2-3 words, not just weight/price)
+              if (text &&
                 text.length > 3 &&
                 text.length < 50 &&
                 !text.match(/^\d+g\$\d+/) && // Not just weight/price
@@ -1016,99 +1016,99 @@ function extractProductContent ($, url) {
                 !text.match(/^\d+g$/) && // Not just weight
                 text.match(/^[A-Za-z][A-Za-z\s]+[A-Za-z]$/) && // Letters and spaces only
                 text.split(' ').length >= 2) { // At least 2 words
-              productName = text;
-              return false; // Break out of loop
-            }
-          });
-          if (productName !== 'Product Name Not Found') break;
-        }
+                productName = text;
+                return false; // Break out of loop
+              }
+            });
+            if (productName !== 'Product Name Not Found') break;
+          }
 
-        // If still not found, look for any text that looks like a strain name in the raw text
-        if (productName === 'Product Name Not Found') {
-          const strainPatterns = [
-            /([A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g, // "Animal Face", "Brownie Scout"
-            /([A-Z][a-z]+\s+[A-Z][a-z]+)/g // Two word strain names
-          ];
+          // If still not found, look for any text that looks like a strain name in the raw text
+          if (productName === 'Product Name Not Found') {
+            const strainPatterns = [
+              /([A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/g, // "Animal Face", "Brownie Scout"
+              /([A-Z][a-z]+\s+[A-Z][a-z]+)/g // Two word strain names
+            ];
 
-          for (const pattern of strainPatterns) {
-            const matches = productText.match(pattern);
-            if (matches) {
+            for (const pattern of strainPatterns) {
+              const matches = productText.match(pattern);
+              if (matches) {
               // Filter out obvious non-strain matches
-              const validStrains = matches.filter(match =>
-                !match.includes('Rise') &&
+                const validStrains = matches.filter(match =>
+                  !match.includes('Rise') &&
                 !match.includes('Cannabis') &&
                 !match.includes('Medical') &&
                 !match.includes('Menu') &&
                 match.length > 5 &&
                 match.length < 30
-              );
-              if (validStrains.length > 0) {
-                productName = validStrains[0];
-                break;
+                );
+                if (validStrains.length > 0) {
+                  productName = validStrains[0];
+                  break;
+                }
               }
             }
           }
-        }
 
-        // Parse price and weight from text
-        const priceMatch = productText.match(/\$([0-9.,]+)/);
-        const weightMatch = productText.match(/([0-9.]+g)/);
+          // Parse price and weight from text
+          const priceMatch = productText.match(/\$([0-9.,]+)/);
+          const weightMatch = productText.match(/([0-9.]+g)/);
 
-        // Look for THC percentage
-        const thcMatch = productText.match(/(\d+(?:\.\d+)?)\s*%?\s*THC/i) ||
+          // Look for THC percentage
+          const thcMatch = productText.match(/(\d+(?:\.\d+)?)\s*%?\s*THC/i) ||
                         productText.match(/THC[:\s]*(\d+(?:\.\d+)?)\s*%/i);
 
-        // Look for terpenes information
-        const terpenePatterns = [
-          /terpenes?[:\s]*([^,\n]+)/i,
-          /dominant terpenes?[:\s]*([^,\n]+)/i,
-          /(myrcene|limonene|pinene|caryophyllene|linalool|humulene|terpinolene)/i
-        ];
-        let terpenes = null;
-        for (const pattern of terpenePatterns) {
-          const match = productText.match(pattern);
-          if (match) {
-            terpenes = match[1] || match[0];
-            break;
+          // Look for terpenes information
+          const terpenePatterns = [
+            /terpenes?[:\s]*([^,\n]+)/i,
+            /dominant terpenes?[:\s]*([^,\n]+)/i,
+            /(myrcene|limonene|pinene|caryophyllene|linalool|humulene|terpinolene)/i
+          ];
+          let terpenes = null;
+          for (const pattern of terpenePatterns) {
+            const match = productText.match(pattern);
+            if (match) {
+              terpenes = match[1] || match[0];
+              break;
+            }
           }
+
+          // Look for additional product details in nested elements
+          const details = $product.find('[class*="detail"], [class*="info"], [class*="spec"]').text().trim();
+          const thcFromDetails = details.match(/(\d+(?:\.\d+)?)\s*%?\s*THC/i);
+          const terpFromDetails = details.match(/terpenes?[:\s]*([^,\n]+)/i);
+
+          const feature = {
+            type: 'cannabis-flower',
+            productName,
+            riseLocation,
+            sourceUrl: fullProductUrl || url,
+            weight: weightMatch ? weightMatch[1] : null,
+            price: priceMatch ? `$${priceMatch[1]}` : null,
+            thc: thcMatch ? `${thcMatch[1]}%` : (thcFromDetails ? `${thcFromDetails[1]}%` : null),
+            cbd: null, // Not typically found in fallback extraction
+            terpenes: terpenes || terpFromDetails?.[1] || null,
+            rawText: productText,
+            detailsText: details || null,
+            source: 'rise-cannabis'
+          };
+
+          content.features.push(JSON.stringify(feature));
+          console.log(`🌿 Product ${i}: "${productName || 'Unnamed'}" - ${weightMatch?.[1] || 'No weight'} - ${priceMatch ? `$${priceMatch[1]}` : 'No price'} - THC: ${feature.thc || 'Not found'}`);
+          console.log(`   Raw text: "${productText.substring(0, 100)}${productText.length > 100 ? '...' : ''}"}`);
         }
+      });
 
-        // Look for additional product details in nested elements
-        const details = $product.find('[class*="detail"], [class*="info"], [class*="spec"]').text().trim();
-        const thcFromDetails = details.match(/(\d+(?:\.\d+)?)\s*%?\s*THC/i);
-        const terpFromDetails = details.match(/terpenes?[:\s]*([^,\n]+)/i);
-
-        const feature = {
-          type: 'cannabis-flower',
-          productName: productName,
-          riseLocation: riseLocation,
-          sourceUrl: fullProductUrl || url,
-          weight: weightMatch ? weightMatch[1] : null,
-          price: priceMatch ? `$${priceMatch[1]}` : null,
-          thc: thcMatch ? `${thcMatch[1]}%` : (thcFromDetails ? `${thcFromDetails[1]}%` : null),
-          cbd: null, // Not typically found in fallback extraction
-          terpenes: terpenes || terpFromDetails?.[1] || null,
-          rawText: productText,
-          detailsText: details || null,
-          source: 'rise-cannabis'
-        };
-
-        content.features.push(JSON.stringify(feature));
-        console.log(`🌿 Product ${i}: "${productName || 'Unnamed'}" - ${weightMatch?.[1] || 'No weight'} - ${priceMatch ? `$${priceMatch[1]}` : 'No price'} - THC: ${feature.thc || 'Not found'}`);
-        console.log(`   Raw text: "${productText.substring(0, 100)}${productText.length > 100 ? '...' : ''}"}`);
-      }
-    });
-
-    console.log(`🌿 Extracted ${content.features.length} detailed cannabis products from ${riseLocation}`);
+      console.log(`🌿 Extracted ${content.features.length} detailed cannabis products from ${riseLocation}`);
     }
   } else if (url && url.includes('visitgreengoods.com')) {
     console.log('🌿 Extracting Green Goods products...');
 
     // Extract location from URL or page title
     const locationMatch = url.match(/\/([a-z-]+)-mn-menu/);
-    const location = locationMatch ?
-      `Green Goods ${locationMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}, Minnesota` :
-      'Green Goods Minnesota';
+    const location = locationMatch
+      ? `Green Goods ${locationMatch[1].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}, Minnesota`
+      : 'Green Goods Minnesota';
 
     console.log('🔍 Searching for Green Goods product data...');
     const pageText = $('body').text();

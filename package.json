@@ -1,7 +1,7 @@
 {
-  "name": "hacksaws2x4",
-  "version": "3.0.0",
-  "description": "Advanced content extraction API with browser emulation, popup handling, and structured data output for price tracking and inventory monitoring",
+  "name": "vibe-coding-academy",
+  "version": "1.0.0",
+  "description": "🎵 Vibe Coding Academy - Learn web development through real projects while exploring security, networking, and career opportunities. From browser user to professional developer in 30 days.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -63,28 +63,31 @@
     "quality:report": "echo '📊 Quality Report:'; npm run lint && echo '✅ Linting passed' || echo '⚠️ Linting issues'; npm run test:ci && echo '✅ Tests passed' || echo '⚠️ Test failures'; echo 'Report complete - issues are non-blocking'"
   },
   "keywords": [
-    "web-scraping",
-    "content-extraction",
-    "browser-automation",
-    "popup-handling",
-    "price-tracking",
-    "inventory-monitoring",
-    "ecommerce-scraping",
-    "playwright",
-    "structured-data",
-    "api",
+    "coding-education",
+    "web-development",
+    "api-development",
+    "security-fundamentals",
+    "network-programming",
+    "career-development",
+    "vibe-coding",
+    "beginner-friendly",
+    "hands-on-learning",
+    "tech-careers",
     "nodejs",
-    "express"
+    "express",
+    "cybersecurity",
+    "penetration-testing",
+    "networking"
   ],
-  "author": "PDuggusa <patrick@dugganusa.com>",
+  "author": "Vibe Coding Academy <learn@vibecoding.academy>",
   "license": "MIT",
-  "homepage": "https://github.com/pduggusa/genz-translator-api#readme",
+  "homepage": "https://github.com/vibecoding/academy#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pduggusa/genz-translator-api.git"
+    "url": "git+https://github.com/vibecoding/academy.git"
   },
   "bugs": {
-    "url": "https://github.com/pduggusa/genz-translator-api/issues"
+    "url": "https://github.com/vibecoding/academy/issues"
   },
   "engines": {
     "node": ">=18.0.0",
